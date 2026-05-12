@@ -35,6 +35,11 @@ Documentacao local:
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - OpenAPI JSON: `http://127.0.0.1:8000/openapi.json`
 
+Documentacao em producao:
+
+- Swagger UI: `https://vercel-api-delta-topaz.vercel.app/docs`
+- OpenAPI JSON: `https://vercel-api-delta-topaz.vercel.app/openapi.json`
+
 ## Exemplos
 
 Criar payload:
@@ -51,4 +56,24 @@ Consumir payload:
 ```bash
 curl http://127.0.0.1:8000/api/payloads/payload_ID \
   -H "X-API-KEY: chave-do-sistema-b"
+```
+
+## Teste E2E
+
+O script abaixo cria um payload como Sistema A, consome como Sistema B e confirma que a segunda leitura retorna `404`.
+
+```bash
+python scripts/test_e2e.py \
+  --base-url https://vercel-api-delta-topaz.vercel.app \
+  --system-a-key SUA_SYSTEM_A_API_KEY \
+  --system-b-key SUA_SYSTEM_B_API_KEY
+```
+
+Tambem da para usar variaveis de ambiente:
+
+```bash
+API_BASE_URL=https://vercel-api-delta-topaz.vercel.app \
+SYSTEM_A_API_KEY=SUA_SYSTEM_A_API_KEY \
+SYSTEM_B_API_KEY=SUA_SYSTEM_B_API_KEY \
+python scripts/test_e2e.py
 ```
