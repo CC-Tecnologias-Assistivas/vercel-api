@@ -1,8 +1,8 @@
 # RehabEasy Transfer API
 
-API FastAPI stateless para transferir payloads temporarios entre sistemas. O Sistema A publica um payload, a API devolve um token assinado no campo `id`, e o RehabEasy consome esse token como Sistema B para gravar os dados no SQLite local do aplicativo.
+API FastAPI para transferir payloads temporarios entre sistemas. O Sistema A publica um payload, o RehabEasy consome uma vez como Sistema B e grava os dados no SQLite local do aplicativo.
 
-Sem banco externo, a API nao guarda estado e nao consegue garantir consumo unico real. A seguranca passa a ser assinatura HMAC + expiracao por TTL. O mesmo token pode ser lido novamente ate expirar, entao o controle de duplicidade fica no RehabEasy via SQLite.
+O armazenamento transacional fica no Supabase/Postgres. O consumo unico e feito por `PATCH` condicional: somente payloads nao consumidos e ainda dentro do TTL recebem `consumed_at`.
 
 ## Endpoints
 
@@ -16,17 +16,35 @@ Sem banco externo, a API nao guarda estado e nao consegue garantir consumo unico
 Copie `.env.example` e configure os valores na Vercel:
 
 ```env
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_PAYLOADS_TABLE=payloads
 SYSTEM_A_API_KEY=
 SYSTEM_B_API_KEY=
-TRANSFER_SIGNING_SECRET=
 PAYLOAD_TTL_SECONDS=1800
-MAX_PAYLOAD_BYTES=8192
+MAX_PAYLOAD_BYTES=1048576
 ENVIRONMENT=production
 ```
 
-`TRANSFER_SIGNING_SECRET` e recomendado. Se nao for definido, a API usa uma composicao de `SYSTEM_A_API_KEY` e `SYSTEM_B_API_KEY` para assinar os tokens.
+Use a service role key somente no backend/Vercel. Nao exponha essa chave no RehabEasy nem em frontend.
 
-Como o payload fica embutido no token retornado como `id`, mantenha payloads pequenos. O limite padrao e `8192` bytes.
+## Tabela Supabase
+
+Crie a tabela no SQL Editor do Supabase:
+
+```sql
+create table if not exists public.payloads (
+  id text primary key,
+  created_at timestamptz not null,
+  expires_at timestamptz not null,
+  consumed_at timestamptz null,
+  source text not null,
+  payload jsonb not null
+);
+
+create index if not exists idx_payloads_expires_at on public.payloads (expires_at);
+create index if not exists idx_payloads_consumed_at on public.payloads (consumed_at);
+```
 
 ## Rodar localmente
 
@@ -65,7 +83,7 @@ curl http://127.0.0.1:8000/api/payloads/payload_ID \
 
 ## Teste E2E
 
-O script abaixo cria um payload como Sistema A, consulta status e consome como Sistema B.
+O script abaixo cria um payload como Sistema A, consome como Sistema B e confirma que a segunda leitura retorna `404`.
 
 ```bash
 python scripts/test_e2e.py \

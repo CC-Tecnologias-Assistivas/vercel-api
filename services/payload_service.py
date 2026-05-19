@@ -1,15 +1,13 @@
-import base64
-import hashlib
-import hmac
 import json
-import time
+import secrets
+from datetime import datetime, timedelta, timezone
 from json import JSONDecodeError
-from typing import Any
 
 from fastapi import Request
 
 from core.config import Settings
 from core.errors import InvalidPayloadError, PayloadNotFoundError, PayloadTooLargeError
+from repositories.supabase_payload_repository import SupabasePayloadRepository
 from schemas.payload_schema import (
     CreatePayloadResponse,
     PayloadStatusFoundResponse,
@@ -19,7 +17,8 @@ from schemas.payload_schema import (
 
 
 class PayloadService:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, repository: SupabasePayloadRepository, settings: Settings) -> None:
+        self._repository = repository
         self._settings = settings
 
     async def create_payload(self, request: Request) -> CreatePayloadResponse:
@@ -42,14 +41,16 @@ class PayloadService:
         if not isinstance(payload, dict) or not payload:
             raise InvalidPayloadError
 
-        now = int(time.time())
-        envelope = {
-            "created_at": now,
-            "expires_at": now + self._settings.payload_ttl_seconds,
-            "source": "sistema-a",
-            "payload": payload,
-        }
-        payload_id = self._encode_token(envelope)
+        payload_id = self._generate_payload_id()
+        created_at = datetime.now(timezone.utc)
+        expires_at = created_at + timedelta(seconds=self._settings.payload_ttl_seconds)
+
+        self._repository.insert_payload(
+            payload_id=payload_id,
+            created_at=created_at,
+            expires_at=expires_at,
+            payload=payload,
+        )
 
         return CreatePayloadResponse(
             id=payload_id,
@@ -58,81 +59,33 @@ class PayloadService:
         )
 
     def consume_payload(self, payload_id: str) -> RetrievePayloadResponse:
-        stored_payload = self._decode_token(payload_id)
+        row = self._repository.consume_payload(
+            payload_id=payload_id,
+            consumed_at=datetime.now(timezone.utc),
+        )
+        if row is None:
+            raise PayloadNotFoundError
+
         return RetrievePayloadResponse(
             id=payload_id,
-            payload=stored_payload["payload"],
+            payload=row["payload"],
             consumed=True,
         )
 
     def get_payload_status(
         self, payload_id: str
     ) -> PayloadStatusFoundResponse | PayloadStatusNotFoundResponse:
-        try:
-            stored_payload = self._decode_token(payload_id)
-        except PayloadNotFoundError:
+        row = self._repository.get_payload_status(payload_id)
+        if row is None or row.get("consumed_at"):
             return PayloadStatusNotFoundResponse(id=payload_id)
 
-        ttl_seconds = int(stored_payload["expires_at"]) - int(time.time())
+        expires_at = datetime.fromisoformat(row["expires_at"].replace("Z", "+00:00"))
+        ttl_seconds = int((expires_at - datetime.now(timezone.utc)).total_seconds())
         if ttl_seconds <= 0:
             return PayloadStatusNotFoundResponse(id=payload_id)
 
         return PayloadStatusFoundResponse(id=payload_id, ttl_seconds=ttl_seconds)
 
-    def _encode_token(self, envelope: dict[str, Any]) -> str:
-        body = json.dumps(envelope, separators=(",", ":"), sort_keys=True).encode("utf-8")
-        body_token = self._base64url_encode(body)
-        signature = self._sign(body_token)
-        return f"payload_{body_token}.{signature}"
-
-    def _decode_token(self, payload_id: str) -> dict[str, Any]:
-        if not payload_id.startswith("payload_"):
-            raise PayloadNotFoundError
-
-        token = payload_id.removeprefix("payload_")
-        try:
-            body_token, signature = token.rsplit(".", 1)
-        except ValueError as exc:
-            raise PayloadNotFoundError from exc
-
-        expected_signature = self._sign(body_token)
-        if not hmac.compare_digest(signature, expected_signature):
-            raise PayloadNotFoundError
-
-        try:
-            raw_body = self._base64url_decode(body_token)
-            envelope = json.loads(raw_body)
-        except (JSONDecodeError, ValueError) as exc:
-            raise PayloadNotFoundError from exc
-
-        if not isinstance(envelope, dict) or not isinstance(envelope.get("payload"), dict):
-            raise PayloadNotFoundError
-
-        expires_at = envelope.get("expires_at")
-        if not isinstance(expires_at, int) or expires_at <= int(time.time()):
-            raise PayloadNotFoundError
-
-        return envelope
-
-    def _sign(self, body_token: str) -> str:
-        digest = hmac.new(
-            self._signing_secret().encode("utf-8"),
-            body_token.encode("utf-8"),
-            hashlib.sha256,
-        ).digest()
-        return self._base64url_encode(digest)
-
-    def _signing_secret(self) -> str:
-        if self._settings.transfer_signing_secret:
-            return self._settings.transfer_signing_secret
-
-        return f"{self._settings.system_a_api_key}:{self._settings.system_b_api_key}"
-
     @staticmethod
-    def _base64url_encode(value: bytes) -> str:
-        return base64.urlsafe_b64encode(value).decode("ascii").rstrip("=")
-
-    @staticmethod
-    def _base64url_decode(value: str) -> bytes:
-        padding = "=" * (-len(value) % 4)
-        return base64.urlsafe_b64decode(value + padding)
+    def _generate_payload_id() -> str:
+        return f"payload_{secrets.token_urlsafe(32)}"

@@ -4,21 +4,25 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Settings:
+    supabase_url: str
+    supabase_service_role_key: str
+    supabase_payloads_table: str
     system_a_api_key: str
     system_b_api_key: str
-    transfer_signing_secret: str
     payload_ttl_seconds: int = 1800
-    max_payload_bytes: int = 8_192
+    max_payload_bytes: int = 1_048_576
     environment: str = "production"
 
     @classmethod
     def from_env(cls) -> "Settings":
         return cls(
+            supabase_url=os.getenv("SUPABASE_URL", ""),
+            supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
+            supabase_payloads_table=os.getenv("SUPABASE_PAYLOADS_TABLE", "payloads"),
             system_a_api_key=os.getenv("SYSTEM_A_API_KEY", ""),
             system_b_api_key=os.getenv("SYSTEM_B_API_KEY", ""),
-            transfer_signing_secret=os.getenv("TRANSFER_SIGNING_SECRET", ""),
             payload_ttl_seconds=_get_int_env("PAYLOAD_TTL_SECONDS", 1800),
-            max_payload_bytes=_get_int_env("MAX_PAYLOAD_BYTES", 8_192),
+            max_payload_bytes=_get_int_env("MAX_PAYLOAD_BYTES", 1_048_576),
             environment=os.getenv("ENVIRONMENT", "production"),
         )
 

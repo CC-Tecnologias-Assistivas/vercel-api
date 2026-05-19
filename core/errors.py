@@ -12,3 +12,7 @@ class InvalidPayloadError(PayloadApiError):
 
 class PayloadNotFoundError(PayloadApiError):
     pass
+
+
+class PayloadStoreUnavailableError(PayloadApiError):
+    pass

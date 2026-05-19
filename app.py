@@ -6,9 +6,11 @@ from core.config import settings
 from core.errors import (
     InvalidPayloadError,
     PayloadNotFoundError,
+    PayloadStoreUnavailableError,
     PayloadTooLargeError,
 )
 from core.security import require_system_a, require_system_b
+from repositories.supabase_payload_repository import SupabasePayloadRepository
 from schemas.payload_schema import (
     CreatePayloadResponse,
     HealthResponse,
@@ -22,15 +24,16 @@ from services.payload_service import PayloadService
 app = FastAPI(
     title="RehabEasy Transfer API",
     description=(
-        "API stateless para transferencia de payloads assinados entre "
-        "sistemas e importacao pelo RehabEasy."
+        "API para transferencia de payloads entre sistemas com consumo "
+        "unico garantido no Supabase."
     ),
-    version="1.2.0",
+    version="1.3.0",
 )
 
 
 def get_payload_service() -> PayloadService:
-    return PayloadService(settings=settings)
+    repository = SupabasePayloadRepository(settings=settings)
+    return PayloadService(repository=repository, settings=settings)
 
 
 @app.exception_handler(RequestValidationError)
@@ -69,7 +72,17 @@ async def payload_not_found_handler(
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
-        content={"detail": "Payload nao encontrado, expirado ou invalido"},
+        content={"detail": "Payload nao encontrado, expirado ou ja consumido"},
+    )
+
+
+@app.exception_handler(PayloadStoreUnavailableError)
+async def payload_store_unavailable_handler(
+    request: Request, exc: PayloadStoreUnavailableError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={"detail": "Banco Supabase indisponivel ou nao configurado"},
     )
 
 
