@@ -7,18 +7,25 @@ import urllib.request
 
 
 DEFAULT_PAYLOAD = {
-    "cliente_id": "123",
-    "evento": "pedido_criado",
-    "dados": {
-        "pedido_id": "ABC-999",
-        "valor": 250.75,
-    },
+    "source": "sistema-a",
+    "records": [
+        {
+            "id": "atendimento-ABC-999",
+            "title": "Atendimento ABC-999",
+            "sender": "sistema-a",
+            "recipient": "RehabEasy",
+            "created_at": "2026-05-19T10:00:00Z",
+            "summary": "Registro de teste para importacao no RehabEasy",
+            "content": "Paciente sincronizado pela API de transferencia.",
+            "tags": ["e2e", "rehabeasy"],
+        }
+    ],
 }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Testa criacao, consumo e consumo unico da Temporary Payload API."
+        description="Testa criacao, consumo e consumo unico da RehabEasy Transfer API."
     )
     parser.add_argument(
         "--base-url",

@@ -22,12 +22,12 @@ from services.payload_service import PayloadService
 
 
 app = FastAPI(
-    title="Temporary Payload API",
+    title="RehabEasy Transfer API",
     description=(
-        "API intermediaria para armazenamento temporario de payloads com "
-        "TTL e consumo unico."
+        "API intermediaria para transferencia de payloads entre sistemas "
+        "e consumo unico pelo RehabEasy."
     ),
-    version="1.0.0",
+    version="1.1.0",
 )
 
 
@@ -88,7 +88,7 @@ async def redis_unavailable_handler(
 
 @app.get("/api/health", response_model=HealthResponse, tags=["health"])
 def health_check() -> HealthResponse:
-    return HealthResponse(status="ok", service="temporary-payload-api")
+    return HealthResponse(status="ok", service="rehabeasy-transfer-api")
 
 
 @app.post(

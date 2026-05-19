@@ -1,6 +1,6 @@
-# Temporary Payload API
+# RehabEasy Transfer API
 
-API FastAPI para armazenar payloads temporarios no Upstash Redis com TTL de 30 minutos e consumo unico via `GETDEL`.
+API FastAPI para transferir payloads temporarios entre sistemas. O Sistema A publica um payload, o RehabEasy consome uma vez como Sistema B e grava os dados no SQLite local do aplicativo.
 
 ## Endpoints
 
@@ -48,7 +48,7 @@ Criar payload:
 curl -X POST http://127.0.0.1:8000/api/payloads \
   -H "Content-Type: application/json" \
   -H "X-API-KEY: chave-do-sistema-a" \
-  -d '{"evento":"pedido_criado","dados":{"pedido_id":"ABC-999"}}'
+  -d '{"source":"sistema-a","records":[{"id":"atendimento-ABC-999","title":"Atendimento ABC-999","sender":"sistema-a","recipient":"RehabEasy","created_at":"2026-05-19T10:00:00Z","summary":"Registro para importacao","content":"Paciente sincronizado pela API.","tags":["rehabeasy"]}]}'
 ```
 
 Consumir payload:
