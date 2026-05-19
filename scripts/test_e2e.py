@@ -2,7 +2,6 @@ import argparse
 import json
 import os
 import sys
-import urllib.error
 import urllib.request
 
 
@@ -25,7 +24,7 @@ DEFAULT_PAYLOAD = {
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Testa criacao, consumo e consumo unico da RehabEasy Transfer API."
+        description="Testa criacao, status e consumo stateless da RehabEasy Transfer API."
     )
     parser.add_argument(
         "--base-url",
@@ -90,19 +89,15 @@ def main() -> int:
         assert consumed["consumed"] is True
         print("   OK")
 
-        print("5. Confirmando consumo unico...")
-        try:
-            request_json(
-                "GET",
-                f"{base_url}/api/payloads/{payload_id}",
-                api_key=args.system_b_key,
-            )
-        except urllib.error.HTTPError as exc:
-            if exc.code != 404:
-                raise
-            print("   OK: segunda leitura retornou 404")
-        else:
-            raise AssertionError("A segunda leitura deveria retornar 404")
+        print("5. Confirmando leitura stateless repetivel antes da expiracao...")
+        consumed_again = request_json(
+            "GET",
+            f"{base_url}/api/payloads/{payload_id}",
+            api_key=args.system_b_key,
+        )
+        assert consumed_again["id"] == payload_id
+        assert consumed_again["payload"] == DEFAULT_PAYLOAD
+        print("   OK")
 
     except Exception as exc:
         print(f"Teste falhou: {exc}", file=sys.stderr)

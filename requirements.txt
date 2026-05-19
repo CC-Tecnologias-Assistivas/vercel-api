@@ -1,4 +1,3 @@
 fastapi
-upstash-redis
 pydantic
 uvicorn[standard]

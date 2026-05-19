@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
 class CreatePayloadResponse(BaseModel):
@@ -32,9 +32,3 @@ class HealthResponse(BaseModel):
     service: str
 
 
-class StoredPayload(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    created_at: str
-    source: str
-    payload: dict[str, Any]

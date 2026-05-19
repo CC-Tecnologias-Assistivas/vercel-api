@@ -7,10 +7,8 @@ from core.errors import (
     InvalidPayloadError,
     PayloadNotFoundError,
     PayloadTooLargeError,
-    RedisUnavailableError,
 )
 from core.security import require_system_a, require_system_b
-from repositories.redis_repository import RedisPayloadRepository
 from schemas.payload_schema import (
     CreatePayloadResponse,
     HealthResponse,
@@ -24,16 +22,15 @@ from services.payload_service import PayloadService
 app = FastAPI(
     title="RehabEasy Transfer API",
     description=(
-        "API intermediaria para transferencia de payloads entre sistemas "
-        "e consumo unico pelo RehabEasy."
+        "API stateless para transferencia de payloads assinados entre "
+        "sistemas e importacao pelo RehabEasy."
     ),
-    version="1.1.0",
+    version="1.2.0",
 )
 
 
 def get_payload_service() -> PayloadService:
-    repository = RedisPayloadRepository.from_settings(settings)
-    return PayloadService(repository=repository, settings=settings)
+    return PayloadService(settings=settings)
 
 
 @app.exception_handler(RequestValidationError)
@@ -72,17 +69,7 @@ async def payload_not_found_handler(
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
-        content={"detail": "Payload nao encontrado, expirado ou ja consumido"},
-    )
-
-
-@app.exception_handler(RedisUnavailableError)
-async def redis_unavailable_handler(
-    request: Request, exc: RedisUnavailableError
-) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        content={"detail": "Redis indisponivel"},
+        content={"detail": "Payload nao encontrado, expirado ou invalido"},
     )
 
 

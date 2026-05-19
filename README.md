@@ -1,6 +1,8 @@
 # RehabEasy Transfer API
 
-API FastAPI para transferir payloads temporarios entre sistemas. O Sistema A publica um payload, o RehabEasy consome uma vez como Sistema B e grava os dados no SQLite local do aplicativo.
+API FastAPI stateless para transferir payloads temporarios entre sistemas. O Sistema A publica um payload, a API devolve um token assinado no campo `id`, e o RehabEasy consome esse token como Sistema B para gravar os dados no SQLite local do aplicativo.
+
+Sem banco externo, a API nao guarda estado e nao consegue garantir consumo unico real. A seguranca passa a ser assinatura HMAC + expiracao por TTL. O mesmo token pode ser lido novamente ate expirar, entao o controle de duplicidade fica no RehabEasy via SQLite.
 
 ## Endpoints
 
@@ -14,14 +16,17 @@ API FastAPI para transferir payloads temporarios entre sistemas. O Sistema A pub
 Copie `.env.example` e configure os valores na Vercel:
 
 ```env
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
 SYSTEM_A_API_KEY=
 SYSTEM_B_API_KEY=
+TRANSFER_SIGNING_SECRET=
 PAYLOAD_TTL_SECONDS=1800
-MAX_PAYLOAD_BYTES=1048576
+MAX_PAYLOAD_BYTES=8192
 ENVIRONMENT=production
 ```
+
+`TRANSFER_SIGNING_SECRET` e recomendado. Se nao for definido, a API usa uma composicao de `SYSTEM_A_API_KEY` e `SYSTEM_B_API_KEY` para assinar os tokens.
+
+Como o payload fica embutido no token retornado como `id`, mantenha payloads pequenos. O limite padrao e `8192` bytes.
 
 ## Rodar localmente
 
@@ -60,7 +65,7 @@ curl http://127.0.0.1:8000/api/payloads/payload_ID \
 
 ## Teste E2E
 
-O script abaixo cria um payload como Sistema A, consome como Sistema B e confirma que a segunda leitura retorna `404`.
+O script abaixo cria um payload como Sistema A, consulta status e consome como Sistema B.
 
 ```bash
 python scripts/test_e2e.py \

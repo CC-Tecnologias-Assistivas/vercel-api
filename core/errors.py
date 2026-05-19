@@ -12,7 +12,3 @@ class InvalidPayloadError(PayloadApiError):
 
 class PayloadNotFoundError(PayloadApiError):
     pass
-
-
-class RedisUnavailableError(PayloadApiError):
-    pass
