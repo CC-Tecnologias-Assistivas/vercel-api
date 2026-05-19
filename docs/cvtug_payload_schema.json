@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://telemedicinacc.vercel.app/schemas/cvtug-payload.schema.json",
+  "title": "CvTUG payload for RehabEasy Transfer API",
+  "type": "object",
+  "required": ["source", "schema_version", "records"],
+  "properties": {
+    "source": {
+      "const": "cvtug"
+    },
+    "schema_version": {
+      "type": "string",
+      "examples": ["1.0"]
+    },
+    "report_type": {
+      "const": "TUG"
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "sender",
+          "recipient",
+          "created_at",
+          "summary",
+          "content",
+          "patient",
+          "assessment"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "sender": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "patient": {
+            "type": "object",
+            "required": ["name", "age_years", "sex", "external_id"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "age_years": {
+                "type": "integer"
+              },
+              "sex": {
+                "type": "string"
+              },
+              "external_id": {
+                "type": "string"
+              }
+            }
+          },
+          "assessment": {
+            "type": "object",
+            "required": ["performed_at", "conditions", "flags"],
+            "properties": {
+              "performed_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["code", "label", "total_seconds", "phases"],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["normal", "motor", "cognitive"]
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "total_seconds": {
+                      "type": "number"
+                    },
+                    "dual_task_cost_percent": {
+                      "type": ["number", "null"]
+                    },
+                    "reference": {
+                      "type": ["object", "null"]
+                    },
+                    "phases": {
+                      "type": "object",
+                      "required": ["stand_seconds", "walk_seconds", "sit_seconds"],
+                      "properties": {
+                        "stand_seconds": {
+                          "type": "number"
+                        },
+                        "walk_seconds": {
+                          "type": "number"
+                        },
+                        "sit_seconds": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "flags": {
+                "type": "object"
+              },
+              "methodology_notes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "references": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

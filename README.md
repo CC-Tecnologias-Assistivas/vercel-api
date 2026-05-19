@@ -100,3 +100,20 @@ SYSTEM_A_API_KEY=SUA_SYSTEM_A_API_KEY \
 SYSTEM_B_API_KEY=SUA_SYSTEM_B_API_KEY \
 python scripts/test_e2e.py
 ```
+
+## Teste Sistema A -> RehabEasy
+
+Para simular somente o Sistema A enviando um relatorio CvTUG, use:
+
+```bash
+python scripts/send_cvtug_payload.py \
+  --base-url https://telemedicinacc.vercel.app \
+  --system-a-key SUA_SYSTEM_A_API_KEY
+```
+
+O script imprime um `payload_id`. Com o RehabEasy aberto, cole esse ID no campo de payload e clique em `Importar payload`. O RehabEasy sera o Sistema B e consumira esse payload uma unica vez.
+
+Arquivos de referencia:
+
+- Schema: `docs/cvtug_payload_schema.json`
+- Exemplo baseado no PDF: `examples/cvtug_payload_sample.json`

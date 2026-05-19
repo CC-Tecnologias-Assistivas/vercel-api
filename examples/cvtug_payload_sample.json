@@ -1,0 +1,99 @@
+{
+  "source": "cvtug",
+  "schema_version": "1.0",
+  "report_type": "TUG",
+  "records": [
+    {
+      "id": "cvtug-20251121100833-20251121T100800",
+      "title": "CvTUG - Jose GArcia - 21/11/2025 10:08",
+      "sender": "CvTUG",
+      "recipient": "RehabEasy",
+      "created_at": "2025-11-21T10:08:00-03:00",
+      "summary": "TUG normal 10.4s; motora 13.5s; cognitiva 13.7s; pior DTC 32%; alerta para dual-task cost.",
+      "content": "RELATORIO TESTE DE TUG\nPaciente: Jose GArcia\nIdade: 54 | Sexo: Masculino\nID: 20251121100833\nData: 21/11/2025 10:08\n\nResultados:\n- Normal: 10.4s; levantar 2.1s; marcha 6.1s; sentar 2.2s; esperado ~9.9s; limite superior ~14.5s; referencia Kear2017.\n- Motora: 13.5s; DTC 30%; levantar 4.2s; marcha 6.6s; sentar 2.8s.\n- Cognitiva: 13.7s; DTC 32%; levantar 2.9s; marcha 7.5s; sentar 3.3s.\n\nSinalizadores:\n- TUG acima do limite superior: nao.\n- Triagem de quedas: OK.\n- Dual-task cost: ALERTA >=20%.\n- Velocidade media marcha normal: 0.94 m/s.\n- Nota velocidade: Velocidade discretamente baixa (0.8-1.0 m/s).",
+      "tags": ["cvtug", "tug", "dual-task", "fall-risk-screening"],
+      "patient": {
+        "name": "Jose GArcia",
+        "age_years": 54,
+        "sex": "Masculino",
+        "external_id": "20251121100833"
+      },
+      "assessment": {
+        "performed_at": "2025-11-21T10:08:00-03:00",
+        "conditions": [
+          {
+            "code": "normal",
+            "label": "Normal",
+            "total_seconds": 10.4,
+            "dual_task_cost_percent": null,
+            "reference": {
+              "expected_seconds": 9.9,
+              "upper_limit_seconds": 14.5,
+              "source": "Kear2017"
+            },
+            "phases": {
+              "stand_seconds": 2.1,
+              "walk_seconds": 6.1,
+              "sit_seconds": 2.2
+            }
+          },
+          {
+            "code": "motor",
+            "label": "Motora",
+            "total_seconds": 13.5,
+            "dual_task_cost_percent": 30,
+            "reference": null,
+            "phases": {
+              "stand_seconds": 4.2,
+              "walk_seconds": 6.6,
+              "sit_seconds": 2.8
+            }
+          },
+          {
+            "code": "cognitive",
+            "label": "Cognitiva",
+            "total_seconds": 13.7,
+            "dual_task_cost_percent": 32,
+            "reference": null,
+            "phases": {
+              "stand_seconds": 2.9,
+              "walk_seconds": 7.5,
+              "sit_seconds": 3.3
+            }
+          }
+        ],
+        "flags": {
+          "tug_above_upper_limit": false,
+          "fall_screening": {
+            "status": "OK",
+            "thresholds": [
+              {
+                "seconds": 12,
+                "source": "Lusardi2017"
+              },
+              {
+                "seconds": 13.5,
+                "source": "Shumway-Cook2000"
+              }
+            ]
+          },
+          "worst_dual_task_cost_percent": 32,
+          "dual_task_cost_status": "ALERTA >=20%",
+          "normal_walk_speed_mps": 0.94,
+          "walk_speed_note": "Velocidade discretamente baixa (0.8-1.0 m/s)."
+        },
+        "methodology_notes": [
+          "DTC (dual-task cost) 'Atencao' (>=10%) e 'Alerta' (>=20%) e heuristico; interpretar no contexto clinico.",
+          "Normas: <60a Kear 2017 (media/DP); >=60a Tromso 2021 (mediana e ~P95 por sexo; interpolacao linear)."
+        ],
+        "references": [
+          "Kear BM et al. J Prim Care Community Health 2017;8:9-13.",
+          "Svinoy O-E et al. Clin Interv Aging 2021;16:335-343.",
+          "Lusardi MM et al. J Geriatr Phys Ther 2017;40:1-36.",
+          "Shumway-Cook A et al. Phys Ther 2000;80:896-903.",
+          "Studenski S et al. JAMA 2011;305:50-58."
+        ]
+      }
+    }
+  ]
+}
