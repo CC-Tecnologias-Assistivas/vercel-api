@@ -29,7 +29,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--base-url",
-        default=os.getenv("API_BASE_URL", "https://vercel-api-delta-topaz.vercel.app"),
+        default=os.getenv("API_BASE_URL", "https://telemedicinacc.vercel.app"),
         help="URL base da API. Tambem pode usar API_BASE_URL.",
     )
     parser.add_argument(

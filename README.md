@@ -37,8 +37,8 @@ Documentacao local:
 
 Documentacao em producao:
 
-- Swagger UI: `https://vercel-api-delta-topaz.vercel.app/docs`
-- OpenAPI JSON: `https://vercel-api-delta-topaz.vercel.app/openapi.json`
+- Swagger UI: `https://telemedicinacc.vercel.app/docs`
+- OpenAPI JSON: `https://telemedicinacc.vercel.app/openapi.json`
 
 ## Exemplos
 
@@ -64,7 +64,7 @@ O script abaixo cria um payload como Sistema A, consome como Sistema B e confirm
 
 ```bash
 python scripts/test_e2e.py \
-  --base-url https://vercel-api-delta-topaz.vercel.app \
+  --base-url https://telemedicinacc.vercel.app \
   --system-a-key SUA_SYSTEM_A_API_KEY \
   --system-b-key SUA_SYSTEM_B_API_KEY
 ```
@@ -72,7 +72,7 @@ python scripts/test_e2e.py \
 Tambem da para usar variaveis de ambiente:
 
 ```bash
-API_BASE_URL=https://vercel-api-delta-topaz.vercel.app \
+API_BASE_URL=https://telemedicinacc.vercel.app \
 SYSTEM_A_API_KEY=SUA_SYSTEM_A_API_KEY \
 SYSTEM_B_API_KEY=SUA_SYSTEM_B_API_KEY \
 python scripts/test_e2e.py
