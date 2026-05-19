@@ -80,9 +80,13 @@ async def payload_not_found_handler(
 async def payload_store_unavailable_handler(
     request: Request, exc: PayloadStoreUnavailableError
 ) -> JSONResponse:
+    detail = "Banco Supabase indisponivel ou nao configurado"
+    if str(exc):
+        detail = f"{detail}: {str(exc)}"
+
     return JSONResponse(
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        content={"detail": "Banco Supabase indisponivel ou nao configurado"},
+        content={"detail": detail},
     )
 
 
