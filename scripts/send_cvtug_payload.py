@@ -15,7 +15,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Simula o Sistema A enviando um relatorio CvTUG para a API. "
-            "O RehabEasy deve ser o Sistema B: cole o payload_id impresso no app."
+            "O RehabEasy deve ser o Sistema B e consumira automaticamente pelo botao Atualizar."
         )
     )
     parser.add_argument(
@@ -54,7 +54,7 @@ def main() -> int:
     print("Payload CvTUG enviado com sucesso.")
     print(f"payload_id: {payload_id}")
     print()
-    print("No RehabEasy, cole esse payload_id e clique em Importar payload.")
+    print("No RehabEasy, clique em Atualizar para consumir automaticamente o proximo payload pendente.")
     return 0
 
 

@@ -27,7 +27,7 @@ app = FastAPI(
         "API para transferencia de payloads entre sistemas com consumo "
         "unico garantido no Supabase."
     ),
-    version="1.3.0",
+    version="1.4.0",
 )
 
 
@@ -107,6 +107,18 @@ async def create_payload(
     service: PayloadService = Depends(get_payload_service),
 ) -> CreatePayloadResponse:
     return await service.create_payload(request)
+
+
+@app.get(
+    "/api/payloads/next",
+    response_model=RetrievePayloadResponse,
+    tags=["payloads"],
+)
+def consume_next_payload(
+    _: None = Depends(require_system_b),
+    service: PayloadService = Depends(get_payload_service),
+) -> RetrievePayloadResponse:
+    return service.consume_next_payload()
 
 
 @app.get(

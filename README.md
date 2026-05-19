@@ -8,6 +8,7 @@ O armazenamento transacional fica no Supabase/Postgres. O consumo unico e feito 
 
 - `GET /api/health`
 - `POST /api/payloads`
+- `GET /api/payloads/next`
 - `GET /api/payloads/{id}`
 - `GET /api/payloads/{id}/status`
 
@@ -81,6 +82,13 @@ curl http://127.0.0.1:8000/api/payloads/payload_ID \
   -H "X-API-KEY: chave-do-sistema-b"
 ```
 
+Consumir automaticamente o proximo payload pendente:
+
+```bash
+curl http://127.0.0.1:8000/api/payloads/next \
+  -H "X-API-KEY: chave-do-sistema-b"
+```
+
 ## Teste E2E
 
 O script abaixo cria um payload como Sistema A, consome como Sistema B e confirma que a segunda leitura retorna `404`.
@@ -111,7 +119,7 @@ python scripts/send_cvtug_payload.py \
   --system-a-key SUA_SYSTEM_A_API_KEY
 ```
 
-O script imprime um `payload_id`. Com o RehabEasy aberto, cole esse ID no campo de payload e clique em `Importar payload`. O RehabEasy sera o Sistema B e consumira esse payload uma unica vez.
+Com o RehabEasy aberto, clique em `Atualizar`. O RehabEasy sera o Sistema B, buscara automaticamente o proximo payload pendente e consumira esse payload uma unica vez.
 
 Arquivos de referencia:
 

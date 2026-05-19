@@ -99,6 +99,27 @@ def main() -> int:
         else:
             raise AssertionError("A segunda leitura deveria retornar 404")
 
+        print("6. Criando outro payload para testar consumo automatico...")
+        created_next = request_json(
+            "POST",
+            f"{base_url}/api/payloads",
+            api_key=args.system_a_key,
+            body=DEFAULT_PAYLOAD,
+        )
+        next_payload_id = created_next["id"]
+        print(f"   OK: {next_payload_id}")
+
+        print("7. Consumindo proximo payload pendente...")
+        consumed_next = request_json(
+            "GET",
+            f"{base_url}/api/payloads/next",
+            api_key=args.system_b_key,
+        )
+        assert consumed_next["id"] == next_payload_id
+        assert consumed_next["payload"] == DEFAULT_PAYLOAD
+        assert consumed_next["consumed"] is True
+        print("   OK")
+
     except Exception as exc:
         print(f"Teste falhou: {exc}", file=sys.stderr)
         return 1

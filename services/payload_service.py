@@ -72,6 +72,19 @@ class PayloadService:
             consumed=True,
         )
 
+    def consume_next_payload(self) -> RetrievePayloadResponse:
+        row = self._repository.consume_next_payload(
+            consumed_at=datetime.now(timezone.utc),
+        )
+        if row is None:
+            raise PayloadNotFoundError
+
+        return RetrievePayloadResponse(
+            id=row["id"],
+            payload=row["payload"],
+            consumed=True,
+        )
+
     def get_payload_status(
         self, payload_id: str
     ) -> PayloadStatusFoundResponse | PayloadStatusNotFoundResponse:

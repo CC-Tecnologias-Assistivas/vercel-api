@@ -52,6 +52,27 @@ class SupabasePayloadRepository:
         rows = response.json()
         return rows[0] if rows else None
 
+    def consume_next_payload(self, consumed_at: datetime) -> dict[str, Any] | None:
+        response = self._request(
+            "GET",
+            (
+                "?consumed_at=is.null"
+                f"&expires_at=gt.{quote(self._format_timestamp(datetime.now(timezone.utc)))}"
+                "&select=id"
+                "&order=created_at.asc"
+                "&limit=5"
+            ),
+        )
+        if response.status_code != 200:
+            raise PayloadStoreUnavailableError(response.text)
+
+        for row in response.json():
+            consumed = self.consume_payload(row["id"], consumed_at)
+            if consumed is not None:
+                return consumed
+
+        return None
+
     def get_payload_status(self, payload_id: str) -> dict[str, Any] | None:
         response = self._request(
             "GET",
