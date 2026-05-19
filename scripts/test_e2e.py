@@ -22,6 +22,9 @@ DEFAULT_PAYLOAD = {
     ],
 }
 
+DEFAULT_SYSTEM_A_API_KEY = "rehabeasy-system-a"
+DEFAULT_SYSTEM_B_API_KEY = "rehabeasy-system-b"
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(
@@ -34,23 +37,15 @@ def main() -> int:
     )
     parser.add_argument(
         "--system-a-key",
-        default=os.getenv("SYSTEM_A_API_KEY"),
+        default=os.getenv("SYSTEM_A_API_KEY", DEFAULT_SYSTEM_A_API_KEY),
         help="API key do Sistema A. Tambem pode usar SYSTEM_A_API_KEY.",
     )
     parser.add_argument(
         "--system-b-key",
-        default=os.getenv("SYSTEM_B_API_KEY"),
+        default=os.getenv("SYSTEM_B_API_KEY", DEFAULT_SYSTEM_B_API_KEY),
         help="API key do Sistema B. Tambem pode usar SYSTEM_B_API_KEY.",
     )
     args = parser.parse_args()
-
-    if not args.system_a_key or not args.system_b_key:
-        print(
-            "Erro: informe --system-a-key e --system-b-key, ou defina "
-            "SYSTEM_A_API_KEY e SYSTEM_B_API_KEY.",
-            file=sys.stderr,
-        )
-        return 2
 
     base_url = args.base_url.rstrip("/")
 

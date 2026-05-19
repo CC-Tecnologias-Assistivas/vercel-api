@@ -2,6 +2,10 @@ import os
 from dataclasses import dataclass
 
 
+DEFAULT_SYSTEM_A_API_KEY = "rehabeasy-system-a"
+DEFAULT_SYSTEM_B_API_KEY = "rehabeasy-system-b"
+
+
 @dataclass(frozen=True)
 class Settings:
     supabase_url: str
@@ -19,8 +23,8 @@ class Settings:
             supabase_url=os.getenv("SUPABASE_URL", ""),
             supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
             supabase_payloads_table=os.getenv("SUPABASE_PAYLOADS_TABLE", "payloads"),
-            system_a_api_key=os.getenv("SYSTEM_A_API_KEY", ""),
-            system_b_api_key=os.getenv("SYSTEM_B_API_KEY", ""),
+            system_a_api_key=os.getenv("SYSTEM_A_API_KEY", DEFAULT_SYSTEM_A_API_KEY),
+            system_b_api_key=os.getenv("SYSTEM_B_API_KEY", DEFAULT_SYSTEM_B_API_KEY),
             payload_ttl_seconds=_get_int_env("PAYLOAD_TTL_SECONDS", 1800),
             max_payload_bytes=_get_int_env("MAX_PAYLOAD_BYTES", 1_048_576),
             environment=os.getenv("ENVIRONMENT", "production"),
