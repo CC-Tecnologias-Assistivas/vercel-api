@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://telemedicinacc.vercel.app/schemas/recommended-payload.schema.json",
+  "title": "Recommended payload for RehabEasy Transfer API",
+  "type": "object",
+  "required": ["source", "schema_version", "records"],
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "Nome do sistema que publica o payload."
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Versao do contrato usado pelo sistema de origem."
+    },
+    "entity": {
+      "type": "string",
+      "description": "Tipo logico do dado enviado, por exemplo clinical_report."
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "sender",
+          "recipient",
+          "created_at",
+          "summary",
+          "content"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador do registro no sistema de origem."
+          },
+          "title": {
+            "type": "string"
+          },
+          "sender": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

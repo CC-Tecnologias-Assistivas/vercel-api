@@ -11,6 +11,7 @@ from core.errors import (
 )
 from core.security import require_system_a, require_system_b
 from repositories.supabase_payload_repository import SupabasePayloadRepository
+from schemas.payload_examples import CVTUG_PAYLOAD_EXAMPLE, GENERIC_PAYLOAD_EXAMPLE
 from schemas.payload_schema import (
     CreatePayloadResponse,
     HealthResponse,
@@ -24,10 +25,12 @@ from services.payload_service import PayloadService
 app = FastAPI(
     title="RehabEasy Transfer API",
     description=(
-        "API para transferencia de payloads entre sistemas com consumo "
-        "unico garantido no Supabase."
+        "API para transferencia temporaria de payloads JSON entre sistemas. "
+        "O Sistema A publica com `POST /api/payloads`, o Sistema B consome "
+        "uma unica vez com `GET /api/payloads/{id}` ou `GET /api/payloads/next`, "
+        "e o Supabase controla expiracao e consumo unico."
     ),
-    version="1.4.0",
+    version="1.5.0",
 )
 
 
@@ -90,7 +93,12 @@ async def payload_store_unavailable_handler(
     )
 
 
-@app.get("/api/health", response_model=HealthResponse, tags=["health"])
+@app.get(
+    "/api/health",
+    response_model=HealthResponse,
+    tags=["health"],
+    summary="Verifica se a API esta respondendo",
+)
 def health_check() -> HealthResponse:
     return HealthResponse(status="ok", service="rehabeasy-transfer-api")
 
@@ -100,6 +108,38 @@ def health_check() -> HealthResponse:
     response_model=CreatePayloadResponse,
     status_code=status.HTTP_201_CREATED,
     tags=["payloads"],
+    summary="Publica um payload JSON temporario",
+    description=(
+        "Uso exclusivo do Sistema A. O corpo deve ser um JSON valido. "
+        "A API aceita payload livre, mas recomenda o formato com "
+        "`source`, `schema_version` e `records` para padronizar a integracao."
+    ),
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "description": (
+                            "Payload JSON livre. O formato recomendado usa "
+                            "cabecalho do payload e um array `records`."
+                        ),
+                    },
+                    "examples": {
+                        "generic_payload": {
+                            "summary": "Payload generico recomendado",
+                            "value": GENERIC_PAYLOAD_EXAMPLE,
+                        },
+                        "cvtug_payload": {
+                            "summary": "Payload completo do integrador CvTUG",
+                            "value": CVTUG_PAYLOAD_EXAMPLE,
+                        },
+                    },
+                }
+            },
+        }
+    },
 )
 async def create_payload(
     request: Request,
@@ -113,6 +153,11 @@ async def create_payload(
     "/api/payloads/next",
     response_model=RetrievePayloadResponse,
     tags=["payloads"],
+    summary="Consome o proximo payload pendente",
+    description=(
+        "Uso exclusivo do Sistema B. Retorna o payload pendente mais antigo "
+        "que ainda nao expirou e ainda nao foi consumido."
+    ),
 )
 def consume_next_payload(
     _: None = Depends(require_system_b),
@@ -125,6 +170,11 @@ def consume_next_payload(
     "/api/payloads/{payload_id}",
     response_model=RetrievePayloadResponse,
     tags=["payloads"],
+    summary="Consome um payload especifico pelo ID",
+    description=(
+        "Uso exclusivo do Sistema B. Se o payload existir e ainda estiver "
+        "disponivel, ele e retornado e marcado como consumido."
+    ),
 )
 def consume_payload(
     payload_id: str,
@@ -138,6 +188,11 @@ def consume_payload(
     "/api/payloads/{payload_id}/status",
     response_model=PayloadStatusFoundResponse | PayloadStatusNotFoundResponse,
     tags=["payloads"],
+    summary="Consulta a disponibilidade de um payload",
+    description=(
+        "Uso exclusivo do Sistema B. Nao consome o payload; apenas informa "
+        "se ele continua disponivel dentro do TTL."
+    ),
 )
 def get_payload_status(
     payload_id: str,

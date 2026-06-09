@@ -12,6 +12,14 @@ O armazenamento transacional fica no Supabase/Postgres. O consumo unico e feito 
 - `GET /api/payloads/{id}`
 - `GET /api/payloads/{id}/status`
 
+## Fluxo recomendado
+
+1. O sistema publicador monta um JSON com `source`, `schema_version` e `records`.
+2. O sistema publicador envia para `POST /api/payloads` com `X-API-KEY` do Sistema A.
+3. A API salva o payload no Supabase e devolve um `payload_id`.
+4. O RehabEasy ou outro consumidor usa `GET /api/payloads/{id}` ou `GET /api/payloads/next` com a chave do Sistema B.
+5. A primeira leitura bem-sucedida consome o payload. Leituras seguintes retornam `404`.
+
 ## Variaveis de ambiente
 
 Copie `.env.example` e configure os valores na Vercel:
@@ -64,6 +72,14 @@ Documentacao em producao:
 - Swagger UI: `https://telemedicinacc.vercel.app/docs`
 - OpenAPI JSON: `https://telemedicinacc.vercel.app/openapi.json`
 
+Guias e contratos:
+
+- Guia de integracao para terceiros: `docs/api-integration-guide.md`
+- Schema generico recomendado: `docs/recommended_payload_schema.json`
+- Exemplo generico: `examples/generic_payload_sample.json`
+- Schema CvTUG: `docs/cvtug_payload_schema.json`
+- Exemplo CvTUG: `examples/cvtug_payload_sample.json`
+
 ## Exemplos
 
 Criar payload:
@@ -72,7 +88,7 @@ Criar payload:
 curl -X POST http://127.0.0.1:8000/api/payloads \
   -H "Content-Type: application/json" \
   -H "X-API-KEY: chave-do-sistema-a" \
-  -d '{"source":"sistema-a","records":[{"id":"atendimento-ABC-999","title":"Atendimento ABC-999","sender":"sistema-a","recipient":"RehabEasy","created_at":"2026-05-19T10:00:00Z","summary":"Registro para importacao","content":"Paciente sincronizado pela API.","tags":["rehabeasy"]}]}'
+  -d '{"source":"sistema-a","schema_version":"1.0","entity":"clinical_report","records":[{"id":"atendimento-ABC-999","title":"Atendimento ABC-999","sender":"sistema-a","recipient":"RehabEasy","created_at":"2026-05-19T10:00:00Z","summary":"Registro para importacao","content":"Paciente sincronizado pela API.","tags":["rehabeasy"]}]}'
 ```
 
 Consumir payload:

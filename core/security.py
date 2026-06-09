@@ -1,8 +1,12 @@
 import secrets
 
-from fastapi import Header, HTTPException, status
+from fastapi import HTTPException, Security, status
+from fastapi.security import APIKeyHeader
 
 from core.config import settings
+
+
+api_key_header = APIKeyHeader(name="X-API-KEY", auto_error=False)
 
 
 def _validate_api_key(
@@ -29,7 +33,7 @@ def _validate_api_key(
         )
 
 
-def require_system_a(x_api_key: str | None = Header(default=None)) -> None:
+def require_system_a(x_api_key: str | None = Security(api_key_header)) -> None:
     _validate_api_key(
         x_api_key,
         settings.system_a_api_key,
@@ -37,7 +41,7 @@ def require_system_a(x_api_key: str | None = Header(default=None)) -> None:
     )
 
 
-def require_system_b(x_api_key: str | None = Header(default=None)) -> None:
+def require_system_b(x_api_key: str | None = Security(api_key_header)) -> None:
     _validate_api_key(
         x_api_key,
         settings.system_b_api_key,

@@ -17,6 +17,7 @@ class SupabasePayloadRepository:
         payload_id: str,
         created_at: datetime,
         expires_at: datetime,
+        source: str,
         payload: dict[str, Any],
     ) -> None:
         response = self._request(
@@ -26,7 +27,7 @@ class SupabasePayloadRepository:
                 "id": payload_id,
                 "created_at": self._format_timestamp(created_at),
                 "expires_at": self._format_timestamp(expires_at),
-                "source": "sistema-a",
+                "source": source,
                 "payload": payload,
             },
             headers={"Prefer": "return=minimal"},

@@ -49,6 +49,7 @@ class PayloadService:
             payload_id=payload_id,
             created_at=created_at,
             expires_at=expires_at,
+            source=self._extract_source(payload),
             payload=payload,
         )
 
@@ -102,3 +103,8 @@ class PayloadService:
     @staticmethod
     def _generate_payload_id() -> str:
         return f"payload_{secrets.token_urlsafe(32)}"
+
+    @staticmethod
+    def _extract_source(payload: dict) -> str:
+        source = payload.get("source")
+        return source.strip() if isinstance(source, str) and source.strip() else "unknown"
