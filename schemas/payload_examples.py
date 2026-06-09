@@ -138,13 +138,6 @@ CVTUG_PAYLOAD_EXAMPLE = {
                     "DTC (dual-task cost) 'Atencao' (>=10%) e 'Alerta' (>=20%) e heuristico; interpretar no contexto clinico.",
                     "Normas: <60a Kear 2017 (media/DP); >=60a Tromso 2021 (mediana e ~P95 por sexo; interpolacao linear).",
                 ],
-                "references": [
-                    "Kear BM et al. J Prim Care Community Health 2017;8:9-13.",
-                    "Svinoy O-E et al. Clin Interv Aging 2021;16:335-343.",
-                    "Lusardi MM et al. J Geriatr Phys Ther 2017;40:1-36.",
-                    "Shumway-Cook A et al. Phys Ther 2000;80:896-903.",
-                    "Studenski S et al. JAMA 2011;305:50-58.",
-                ],
             },
         }
     ],

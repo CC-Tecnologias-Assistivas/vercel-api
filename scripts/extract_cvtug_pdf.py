@@ -79,8 +79,6 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
     methodology_notes = extract_bullet_list(
         extract_section(raw_text, "Notas metodológicas:", "Referências:")
     )
-    references = extract_references(extract_section(raw_text, "Referências:", None))
-
     file_name_timestamp_text = extract_filename_timestamp(pdf_path.name)
     document_notes = []
     if file_name_timestamp_text and file_name_timestamp_text != performed_at.strftime("%Y%m%d_%H%M%S"):
@@ -194,7 +192,6 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
                 },
             },
             "methodology_notes": methodology_notes,
-            "references": references,
         },
     }
 
@@ -232,11 +229,6 @@ def extract_bullet_list(text: str) -> list[str]:
         if cleaned:
             items.append(cleaned)
     return items
-
-
-def extract_references(text: str) -> list[str]:
-    matches = re.findall(r"\d+\)\s*(.+)", text)
-    return [match.strip() for match in matches]
 
 
 def extract_filename_timestamp(file_name: str) -> str | None:
