@@ -76,12 +76,13 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
     )
     walk_speed_note = capture(raw_text, r"Nota velocidade:\s*([^\n]+)")
 
-    methodology_notes = extract_bullet_list(
-        extract_section(raw_text, "Notas metodológicas:", "Referências:")
-    )
+    methodology_notes = build_generic_methodology_notes(raw_text)
     file_name_timestamp_text = extract_filename_timestamp(pdf_path.name)
     document_notes = []
-    if file_name_timestamp_text and file_name_timestamp_text != performed_at.strftime("%Y%m%d_%H%M%S"):
+    if (
+        file_name_timestamp_text
+        and file_name_timestamp_text != performed_at.strftime("%Y%m%d_%H%M%S")
+    ):
         document_notes.append(
             "O timestamp exibido no relatorio e diferente do timestamp presente no nome do arquivo PDF."
         )
@@ -212,23 +213,20 @@ def build_phases(phase_values: tuple[str, str, str]) -> dict:
     }
 
 
-def extract_section(text: str, start_label: str, end_label: str | None) -> str:
-    start = text.find(start_label)
-    if start < 0:
-        return ""
-    start += len(start_label)
-    end = text.find(end_label, start) if end_label else -1
-    return text[start:end].strip() if end >= 0 else text[start:].strip()
+def build_generic_methodology_notes(raw_text: str) -> list[str]:
+    notes = []
 
+    if "dual-task cost" in raw_text.lower():
+        notes.append(
+            "O dual-task cost e um indicador heuristico e deve ser interpretado no contexto clinico."
+        )
 
-def extract_bullet_list(text: str) -> list[str]:
-    items = []
-    for chunk in re.split(r"•", text):
-        cleaned = " ".join(line.strip() for line in chunk.splitlines() if line.strip())
-        cleaned = cleaned.replace("==================", "").strip()
-        if cleaned:
-            items.append(cleaned)
-    return items
+    if "normas" in raw_text.lower():
+        notes.append(
+            "Os valores de referencia do relatorio devem ser interpretados conforme a metodologia configurada no sistema de origem."
+        )
+
+    return notes
 
 
 def extract_filename_timestamp(file_name: str) -> str | None:
@@ -253,7 +251,15 @@ def capture_float(text: str, pattern: str) -> float:
 
 
 def parse_float(value: str) -> float:
-    return float(value.replace(".", "").replace(",", ".") if value.count(",") > 0 and value.count(".") > 0 and value.find(".") < value.find(",") else value.replace(",", "."))
+    if (
+        value.count(",") > 0
+        and value.count(".") > 0
+        and value.find(".") < value.find(",")
+    ):
+        normalized = value.replace(".", "").replace(",", ".")
+    else:
+        normalized = value.replace(",", ".")
+    return float(normalized)
 
 
 def normalize_bool_ptbr(value: str) -> bool:
