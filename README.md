@@ -28,14 +28,21 @@ Copie `.env.example` e configure os valores na Vercel:
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PAYLOADS_TABLE=payloads
-SYSTEM_A_API_KEY=
-SYSTEM_B_API_KEY=
+SYSTEM_A_API_KEY=sistema-mobile
+SYSTEM_B_API_KEY=rehabeasy-sistema
 PAYLOAD_TTL_SECONDS=1800
 MAX_PAYLOAD_BYTES=1048576
 ENVIRONMENT=production
 ```
 
 Use a service role key somente no backend/Vercel. Nao exponha essa chave no RehabEasy nem em frontend.
+
+Sugestao de nomes para as chaves:
+
+- `SYSTEM_A_API_KEY=sistema-mobile`
+- `SYSTEM_B_API_KEY=rehabeasy-sistema`
+
+Nao existe migration SQL para essa troca. Basta atualizar as variaveis de ambiente na Vercel e a configuracao do consumidor.
 
 ## Tabela Supabase
 

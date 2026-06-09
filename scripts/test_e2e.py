@@ -22,8 +22,8 @@ DEFAULT_PAYLOAD = {
     ],
 }
 
-DEFAULT_SYSTEM_A_API_KEY = "rehabeasy-system-a"
-DEFAULT_SYSTEM_B_API_KEY = "rehabeasy-system-b"
+DEFAULT_SYSTEM_A_API_KEY = "sistema-mobile"
+DEFAULT_SYSTEM_B_API_KEY = "rehabeasy-sistema"
 
 
 def main() -> int:

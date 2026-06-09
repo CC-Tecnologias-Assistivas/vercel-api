@@ -19,6 +19,13 @@ Fluxo esperado:
 
 Nao reutilize a chave do Sistema B no sistema publicador.
 
+Padrao sugerido:
+
+- `SYSTEM_A_API_KEY=sistema-mobile`
+- `SYSTEM_B_API_KEY=rehabeasy-sistema`
+
+Essa troca nao exige migration no Supabase porque as chaves nao ficam no banco. A mudanca e apenas de configuracao.
+
 ## Contrato recomendado
 
 A API aceita qualquer JSON valido no corpo, mas o formato recomendado para integracoes novas e:
