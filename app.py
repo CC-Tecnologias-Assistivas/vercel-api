@@ -30,7 +30,7 @@ app = FastAPI(
         "uma unica vez com `GET /api/payloads/{id}` ou `GET /api/payloads/next`, "
         "e o Supabase controla expiracao e consumo unico."
     ),
-    version="1.5.0",
+    version="1.5.1",
 )
 
 

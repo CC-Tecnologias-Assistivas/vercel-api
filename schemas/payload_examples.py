@@ -22,22 +22,20 @@ CVTUG_PAYLOAD_EXAMPLE = {
     "report_type": "TUG",
     "records": [
         {
-            "id": "cvtug-20251121100833-20251121T100800",
-            "title": "CvTUG - Jose GArcia - 21/11/2025 10:08",
+            "id": "spook-cvtug-001",
+            "title": "Spook CvTUG Teste 001",
             "sender": "CvTUG",
             "recipient": "RehabEasy",
-            "created_at": "2025-11-21T10:08:00-03:00",
+            "created_at": "2026-06-09T14:30:00Z",
             "summary": (
-                "TUG normal 10.4s; motora 13.5s; cognitiva 13.7s; "
-                "pior DTC 32%; triagem de quedas OK; velocidade 0.94 m/s."
+                "SPOOK teste CvTUG: normal 10.4s; motora 13.5s; "
+                "cognitiva 13.7s; pior DTC 32%; velocidade 0.94 m/s."
             ),
             "content": (
-                "Teste TUG com tres condicoes avaliadas. Resultado normal dentro "
-                "do limite superior de referencia, com aumento importante de custo "
-                "em dupla tarefa, especialmente na condicao cognitiva, e "
-                "velocidade de marcha discretamente baixa."
+                "SPOOK payload de teste do CvTUG sem documento de origem e "
+                "sem citacoes estruturadas."
             ),
-            "tags": ["cvtug", "tug", "dual-task", "fall-risk-screening"],
+            "tags": ["spook", "cvtug", "teste-api"],
             "patient": {
                 "name": "Jose GArcia",
                 "age_years": 54,
@@ -45,7 +43,7 @@ CVTUG_PAYLOAD_EXAMPLE = {
                 "external_id": "20251121100833",
             },
             "assessment": {
-                "performed_at": "2025-11-21T10:08:00-03:00",
+                "performed_at": "2026-06-09T14:30:00Z",
                 "measure_unit": "seconds",
                 "conditions": [
                     {
@@ -113,8 +111,8 @@ CVTUG_PAYLOAD_EXAMPLE = {
                     },
                 },
                 "methodology_notes": [
-                    "O dual-task cost e um indicador heuristico e deve ser interpretado no contexto clinico.",
-                    "Os valores de referencia do relatorio devem ser interpretados conforme a metodologia configurada no sistema de origem.",
+                    "SPOOK teste: interpretar os indicadores no contexto clinico.",
+                    "SPOOK teste: payload sanitizado para validacao do RehabEasy.",
                 ],
             },
         }
