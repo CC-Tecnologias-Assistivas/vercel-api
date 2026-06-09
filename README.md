@@ -146,8 +146,8 @@ Com o RehabEasy aberto, clique em `Atualizar`. O RehabEasy sera o Sistema B, bus
 
 Arquivos de referencia:
 
-- Schema: `docs/cvtug_payload_schema.json`
-- Exemplo baseado no PDF: `examples/cvtug_payload_sample.json`
+- Schema padrao: `docs/cvtug_payload_schema.json`
+- Exemplo padrao: `examples/cvtug_payload_sample.json`
 - Extrator PDF -> JSON: `scripts/extract_cvtug_pdf.py`
 
 Para extrair um payload estruturado diretamente de um PDF do CvTUG:

@@ -23,7 +23,7 @@ CVTUG_PAYLOAD_EXAMPLE = {
     "records": [
         {
             "id": "cvtug-20251121100833-20251121T100800",
-            "title": "CvTUG - Jose Garcia - 21/11/2025 10:08",
+            "title": "CvTUG - Jose GArcia - 21/11/2025 10:08",
             "sender": "CvTUG",
             "recipient": "RehabEasy",
             "created_at": "2025-11-21T10:08:00-03:00",
@@ -38,29 +38,8 @@ CVTUG_PAYLOAD_EXAMPLE = {
                 "velocidade de marcha discretamente baixa."
             ),
             "tags": ["cvtug", "tug", "dual-task", "fall-risk-screening"],
-            "source_document": {
-                "file_name": "CvTUG_Report_20251104_175720-1.pdf",
-                "pages": 1,
-                "document_type": "pdf",
-                "report_timestamp_text": "21/11/2025 10:08",
-                "file_name_timestamp_text": "20251104_175720",
-                "notes": [
-                    "O timestamp exibido no relatorio e diferente do timestamp presente no nome do arquivo PDF."
-                ],
-            },
-            "raw_report_text": (
-                "RELATORIO TESTE DE TUG Paciente: Jose Garcia Idade: 54 | Sexo: Masculino "
-                "ID: 20251121100833 Data: 21/11/2025 10:08 Resultados (TUG - segundos): "
-                "Normal 10.4 [esperado~9.9; lim.sup~14.5 | Kear2017]; Motora 13.5 DTC 30%; "
-                "Cognitiva 13.7 DTC 32%. Macro-fases: Normal levantar 2.1, marcha 6.1, "
-                "sentar 2.2; Motora levantar 4.2, marcha 6.6, sentar 2.8; Cognitiva levantar "
-                "2.9, marcha 7.5, sentar 3.3. Sinalizadores automaticos: TUG acima do limite "
-                "superior: nao; Triagem de quedas: OK; Dual-task cost: ALERTA >=20%; "
-                "Velocidade media normal: 0.94 m/s; Nota velocidade: Velocidade discretamente "
-                "baixa (0.8-1.0 m/s)."
-            ),
             "patient": {
-                "name": "Jose Garcia",
+                "name": "Jose GArcia",
                 "age_years": 54,
                 "sex": "Masculino",
                 "external_id": "20251121100833",
@@ -77,7 +56,6 @@ CVTUG_PAYLOAD_EXAMPLE = {
                         "reference": {
                             "expected_seconds": 9.9,
                             "upper_limit_seconds": 14.5,
-                            "source": "Kear2017",
                         },
                         "phases": {
                             "stand_seconds": 2.1,
@@ -119,8 +97,8 @@ CVTUG_PAYLOAD_EXAMPLE = {
                     "fall_screening": {
                         "status": "OK",
                         "thresholds": [
-                            {"seconds": 12, "source": "Lusardi2017"},
-                            {"seconds": 13.5, "source": "Shumway-Cook2000"},
+                            {"seconds": 12},
+                            {"seconds": 13.5},
                         ],
                     },
                     "dual_task_cost": {
@@ -135,8 +113,8 @@ CVTUG_PAYLOAD_EXAMPLE = {
                     },
                 },
                 "methodology_notes": [
-                    "DTC (dual-task cost) 'Atencao' (>=10%) e 'Alerta' (>=20%) e heuristico; interpretar no contexto clinico.",
-                    "Normas: <60a Kear 2017 (media/DP); >=60a Tromso 2021 (mediana e ~P95 por sexo; interpolacao linear).",
+                    "O dual-task cost e um indicador heuristico e deve ser interpretado no contexto clinico.",
+                    "Os valores de referencia do relatorio devem ser interpretados conforme a metodologia configurada no sistema de origem.",
                 ],
             },
         }

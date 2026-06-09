@@ -47,7 +47,6 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
     normal_total = capture_float(raw_text, r"Normal \(total\):\s*([\d.,]+)")
     normal_expected = capture_float(raw_text, r"esperado~([\d.,]+)")
     normal_upper_limit = capture_float(raw_text, r"lim\.sup~([\d.,]+)")
-    normal_reference_source = capture(raw_text, r"lim\.sup~[\d.,]+\s*\|\s*([A-Za-z0-9-]+)")
 
     motor_total = capture_float(raw_text, r"Motora \(total\):\s*([\d.,]+)")
     motor_dtc = capture_float(raw_text, r"Motora \(total\):\s*[\d.,]+\s*DTC:\s*([\d.,]+)%")
@@ -77,16 +76,6 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
     walk_speed_note = capture(raw_text, r"Nota velocidade:\s*([^\n]+)")
 
     methodology_notes = build_generic_methodology_notes(raw_text)
-    file_name_timestamp_text = extract_filename_timestamp(pdf_path.name)
-    document_notes = []
-    if (
-        file_name_timestamp_text
-        and file_name_timestamp_text != performed_at.strftime("%Y%m%d_%H%M%S")
-    ):
-        document_notes.append(
-            "O timestamp exibido no relatorio e diferente do timestamp presente no nome do arquivo PDF."
-        )
-
     normal_phases = phase_lines[0]
     motor_phases = phase_lines[1]
     cognitive_phases = phase_lines[2]
@@ -108,7 +97,6 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
         f"condicao {worst_condition_label}, e velocidade de marcha discretamente baixa."
     )
 
-    raw_report_text = " ".join(line.strip() for line in raw_text.splitlines() if line.strip())
     patient_name_ascii = to_ascii(patient_name)
 
     record = {
@@ -120,15 +108,6 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
         "summary": summary,
         "content": content,
         "tags": ["cvtug", "tug", "dual-task", "fall-risk-screening"],
-        "source_document": {
-            "file_name": pdf_path.name,
-            "pages": len(reader.pages),
-            "document_type": "pdf",
-            "report_timestamp_text": report_datetime_text,
-            "file_name_timestamp_text": file_name_timestamp_text,
-            "notes": document_notes,
-        },
-        "raw_report_text": raw_report_text,
         "patient": {
             "name": patient_name_ascii,
             "age_years": age_years,
@@ -147,7 +126,6 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
                     "reference": {
                         "expected_seconds": normal_expected,
                         "upper_limit_seconds": normal_upper_limit,
-                        "source": normal_reference_source,
                     },
                     "phases": build_phases(normal_phases),
                 },
@@ -177,8 +155,8 @@ def build_payload_from_pdf(pdf_path: Path) -> dict:
                 "fall_screening": {
                     "status": fall_screening_status,
                     "thresholds": [
-                        {"seconds": 12, "source": "Lusardi2017"},
-                        {"seconds": 13.5, "source": "Shumway-Cook2000"},
+                        {"seconds": 12},
+                        {"seconds": 13.5},
                     ],
                 },
                 "dual_task_cost": {
@@ -227,11 +205,6 @@ def build_generic_methodology_notes(raw_text: str) -> list[str]:
         )
 
     return notes
-
-
-def extract_filename_timestamp(file_name: str) -> str | None:
-    match = re.search(r"(\d{8}_\d{6})", file_name)
-    return match.group(1) if match else None
 
 
 def parse_br_datetime(value: str) -> datetime:

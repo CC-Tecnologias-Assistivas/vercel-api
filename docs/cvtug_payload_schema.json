@@ -32,18 +32,10 @@
           "assessment"
         ],
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "sender": {
-            "type": "string"
-          },
-          "recipient": {
-            "type": "string"
-          },
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "sender": { "type": "string" },
+          "recipient": { "type": "string" },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -54,60 +46,20 @@
           },
           "content": {
             "type": "string",
-            "description": "Narrativa curta legivel por humano. Nao usar este campo para guardar estatisticas detalhadas."
+            "description": "Narrativa curta legivel por humano."
           },
           "tags": {
             "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "source_document": {
-            "type": "object",
-            "properties": {
-              "file_name": {
-                "type": "string"
-              },
-              "pages": {
-                "type": "integer"
-              },
-              "document_type": {
-                "type": "string"
-              },
-              "report_timestamp_text": {
-                "type": "string"
-              },
-              "file_name_timestamp_text": {
-                "type": ["string", "null"]
-              },
-              "notes": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "raw_report_text": {
-            "type": "string",
-            "description": "Texto integral extraido do PDF para auditoria e reprocessamento."
+            "items": { "type": "string" }
           },
           "patient": {
             "type": "object",
             "required": ["name", "age_years", "sex", "external_id"],
             "properties": {
-              "name": {
-                "type": "string"
-              },
-              "age_years": {
-                "type": "integer"
-              },
-              "sex": {
-                "type": "string"
-              },
-              "external_id": {
-                "type": "string"
-              }
+              "name": { "type": "string" },
+              "age_years": { "type": "integer" },
+              "sex": { "type": "string" },
+              "external_id": { "type": "string" }
             }
           },
           "assessment": {
@@ -131,42 +83,25 @@
                       "type": "string",
                       "enum": ["normal", "motor", "cognitive"]
                     },
-                    "label": {
-                      "type": "string"
-                    },
-                    "total_seconds": {
-                      "type": "number"
-                    },
+                    "label": { "type": "string" },
+                    "total_seconds": { "type": "number" },
                     "dual_task_cost_percent": {
                       "type": ["number", "null"]
                     },
                     "reference": {
                       "type": ["object", "null"],
                       "properties": {
-                        "expected_seconds": {
-                          "type": "number"
-                        },
-                        "upper_limit_seconds": {
-                          "type": "number"
-                        },
-                        "source": {
-                          "type": "string"
-                        }
+                        "expected_seconds": { "type": "number" },
+                        "upper_limit_seconds": { "type": "number" }
                       }
                     },
                     "phases": {
                       "type": "object",
                       "required": ["stand_seconds", "walk_seconds", "sit_seconds"],
                       "properties": {
-                        "stand_seconds": {
-                          "type": "number"
-                        },
-                        "walk_seconds": {
-                          "type": "number"
-                        },
-                        "sit_seconds": {
-                          "type": "number"
-                        }
+                        "stand_seconds": { "type": "number" },
+                        "walk_seconds": { "type": "number" },
+                        "sit_seconds": { "type": "number" }
                       }
                     }
                   }
@@ -175,37 +110,24 @@
               "derived_metrics": {
                 "type": "object",
                 "properties": {
-                  "worst_dual_task_cost_percent": {
-                    "type": "number"
-                  },
-                  "normal_walk_speed_mps": {
-                    "type": "number"
-                  }
+                  "worst_dual_task_cost_percent": { "type": "number" },
+                  "normal_walk_speed_mps": { "type": "number" }
                 }
               },
               "automated_flags": {
                 "type": "object",
                 "properties": {
-                  "tug_above_upper_limit": {
-                    "type": "boolean"
-                  },
+                  "tug_above_upper_limit": { "type": "boolean" },
                   "fall_screening": {
                     "type": "object",
                     "properties": {
-                      "status": {
-                        "type": "string"
-                      },
+                      "status": { "type": "string" },
                       "thresholds": {
                         "type": "array",
                         "items": {
                           "type": "object",
                           "properties": {
-                            "seconds": {
-                              "type": "number"
-                            },
-                            "source": {
-                              "type": "string"
-                            }
+                            "seconds": { "type": "number" }
                           }
                         }
                       }
@@ -214,38 +136,24 @@
                   "dual_task_cost": {
                     "type": "object",
                     "properties": {
-                      "status": {
-                        "type": "string"
-                      },
-                      "alert_threshold_percent": {
-                        "type": "number"
-                      },
-                      "worst_condition_code": {
-                        "type": "string"
-                      },
-                      "worst_percent": {
-                        "type": "number"
-                      }
+                      "status": { "type": "string" },
+                      "alert_threshold_percent": { "type": "number" },
+                      "worst_condition_code": { "type": "string" },
+                      "worst_percent": { "type": "number" }
                     }
                   },
                   "gait_speed": {
                     "type": "object",
                     "properties": {
-                      "normal_condition_mps": {
-                        "type": "number"
-                      },
-                      "note": {
-                        "type": "string"
-                      }
+                      "normal_condition_mps": { "type": "number" },
+                      "note": { "type": "string" }
                     }
                   }
                 }
               },
               "methodology_notes": {
                 "type": "array",
-                "items": {
-                  "type": "string"
-                }
+                "items": { "type": "string" }
               }
             }
           }

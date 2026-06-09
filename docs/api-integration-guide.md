@@ -65,7 +65,8 @@ Para payloads do CvTUG:
 
 - Use `content` como interpretacao curta legivel por humano.
 - Guarde estatisticas em `assessment.conditions`, `assessment.derived_metrics` e `assessment.automated_flags`.
-- Guarde o texto bruto do PDF em `raw_report_text` para auditoria e reprocessamento.
+- Nao inclua `source_document`, `references` ou citacoes academicas no payload padrao.
+- Se houver necessidade de auditoria, trate isso como extensao interna do sistema de origem, nao como parte do modelo padrao.
 
 Arquivos de apoio:
 
