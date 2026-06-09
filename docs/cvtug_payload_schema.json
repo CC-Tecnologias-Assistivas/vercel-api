@@ -10,7 +10,7 @@
     },
     "schema_version": {
       "type": "string",
-      "examples": ["1.0"]
+      "examples": ["1.1"]
     },
     "report_type": {
       "const": "TUG"
@@ -49,16 +49,48 @@
             "format": "date-time"
           },
           "summary": {
-            "type": "string"
+            "type": "string",
+            "description": "Resumo curto para listagem e triagem."
           },
           "content": {
-            "type": "string"
+            "type": "string",
+            "description": "Narrativa curta legivel por humano. Nao usar este campo para guardar estatisticas detalhadas."
           },
           "tags": {
             "type": "array",
             "items": {
               "type": "string"
             }
+          },
+          "source_document": {
+            "type": "object",
+            "properties": {
+              "file_name": {
+                "type": "string"
+              },
+              "pages": {
+                "type": "integer"
+              },
+              "document_type": {
+                "type": "string"
+              },
+              "report_timestamp_text": {
+                "type": "string"
+              },
+              "file_name_timestamp_text": {
+                "type": ["string", "null"]
+              },
+              "notes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "raw_report_text": {
+            "type": "string",
+            "description": "Texto integral extraido do PDF para auditoria e reprocessamento."
           },
           "patient": {
             "type": "object",
@@ -80,11 +112,14 @@
           },
           "assessment": {
             "type": "object",
-            "required": ["performed_at", "conditions", "flags"],
+            "required": ["performed_at", "measure_unit", "conditions", "automated_flags"],
             "properties": {
               "performed_at": {
                 "type": "string",
                 "format": "date-time"
+              },
+              "measure_unit": {
+                "const": "seconds"
               },
               "conditions": {
                 "type": "array",
@@ -106,7 +141,18 @@
                       "type": ["number", "null"]
                     },
                     "reference": {
-                      "type": ["object", "null"]
+                      "type": ["object", "null"],
+                      "properties": {
+                        "expected_seconds": {
+                          "type": "number"
+                        },
+                        "upper_limit_seconds": {
+                          "type": "number"
+                        },
+                        "source": {
+                          "type": "string"
+                        }
+                      }
                     },
                     "phases": {
                       "type": "object",
@@ -126,8 +172,74 @@
                   }
                 }
               },
-              "flags": {
-                "type": "object"
+              "derived_metrics": {
+                "type": "object",
+                "properties": {
+                  "worst_dual_task_cost_percent": {
+                    "type": "number"
+                  },
+                  "normal_walk_speed_mps": {
+                    "type": "number"
+                  }
+                }
+              },
+              "automated_flags": {
+                "type": "object",
+                "properties": {
+                  "tug_above_upper_limit": {
+                    "type": "boolean"
+                  },
+                  "fall_screening": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "thresholds": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "seconds": {
+                              "type": "number"
+                            },
+                            "source": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "dual_task_cost": {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string"
+                      },
+                      "alert_threshold_percent": {
+                        "type": "number"
+                      },
+                      "worst_condition_code": {
+                        "type": "string"
+                      },
+                      "worst_percent": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "gait_speed": {
+                    "type": "object",
+                    "properties": {
+                      "normal_condition_mps": {
+                        "type": "number"
+                      },
+                      "note": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
               },
               "methodology_notes": {
                 "type": "array",

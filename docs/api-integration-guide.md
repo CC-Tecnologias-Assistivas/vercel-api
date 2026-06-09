@@ -61,12 +61,19 @@ Campos recomendados:
 - `records[].summary`: texto curto para listagem.
 - `records[].content`: texto completo do registro.
 
+Para payloads do CvTUG:
+
+- Use `content` como interpretacao curta legivel por humano.
+- Guarde estatisticas em `assessment.conditions`, `assessment.derived_metrics` e `assessment.automated_flags`.
+- Guarde o texto bruto do PDF em `raw_report_text` para auditoria e reprocessamento.
+
 Arquivos de apoio:
 
 - Schema generico recomendado: [docs/recommended_payload_schema.json](/C:/Users/Chari/dev/CC/vercel-api/docs/recommended_payload_schema.json)
 - Exemplo generico: [examples/generic_payload_sample.json](/C:/Users/Chari/dev/CC/vercel-api/examples/generic_payload_sample.json)
 - Schema CvTUG: [docs/cvtug_payload_schema.json](/C:/Users/Chari/dev/CC/vercel-api/docs/cvtug_payload_schema.json)
 - Exemplo CvTUG: [examples/cvtug_payload_sample.json](/C:/Users/Chari/dev/CC/vercel-api/examples/cvtug_payload_sample.json)
+- Extrator CvTUG PDF -> JSON: [scripts/extract_cvtug_pdf.py](/C:/Users/Chari/dev/CC/vercel-api/scripts/extract_cvtug_pdf.py)
 
 ## Publicacao do payload
 

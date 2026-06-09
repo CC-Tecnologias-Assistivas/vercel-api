@@ -1,6 +1,6 @@
 {
   "source": "cvtug",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "report_type": "TUG",
   "records": [
     {
@@ -9,9 +9,25 @@
       "sender": "CvTUG",
       "recipient": "RehabEasy",
       "created_at": "2025-11-21T10:08:00-03:00",
-      "summary": "TUG normal 10.4s; motora 13.5s; cognitiva 13.7s; pior DTC 32%; alerta para dual-task cost.",
-      "content": "RELATORIO TESTE DE TUG\nPaciente: Jose GArcia\nIdade: 54 | Sexo: Masculino\nID: 20251121100833\nData: 21/11/2025 10:08\n\nResultados:\n- Normal: 10.4s; levantar 2.1s; marcha 6.1s; sentar 2.2s; esperado ~9.9s; limite superior ~14.5s; referencia Kear2017.\n- Motora: 13.5s; DTC 30%; levantar 4.2s; marcha 6.6s; sentar 2.8s.\n- Cognitiva: 13.7s; DTC 32%; levantar 2.9s; marcha 7.5s; sentar 3.3s.\n\nSinalizadores:\n- TUG acima do limite superior: nao.\n- Triagem de quedas: OK.\n- Dual-task cost: ALERTA >=20%.\n- Velocidade media marcha normal: 0.94 m/s.\n- Nota velocidade: Velocidade discretamente baixa (0.8-1.0 m/s).",
-      "tags": ["cvtug", "tug", "dual-task", "fall-risk-screening"],
+      "summary": "TUG normal 10.4s; motora 13.5s; cognitiva 13.7s; pior DTC 32%; triagem de quedas OK; velocidade 0.94 m/s.",
+      "content": "Teste TUG com tres condicoes avaliadas. Resultado normal dentro do limite superior de referencia, com aumento importante de custo em dupla tarefa, especialmente na condicao cognitiva, e velocidade de marcha discretamente baixa.",
+      "tags": [
+        "cvtug",
+        "tug",
+        "dual-task",
+        "fall-risk-screening"
+      ],
+      "source_document": {
+        "file_name": "CvTUG_Report_20251104_175720-1.pdf",
+        "pages": 1,
+        "document_type": "pdf",
+        "report_timestamp_text": "21/11/2025 10:08",
+        "file_name_timestamp_text": "20251104_175720",
+        "notes": [
+          "O timestamp exibido no relatorio e diferente do timestamp presente no nome do arquivo PDF."
+        ]
+      },
+      "raw_report_text": "RELATORIO TESTE DE TUG\nPaciente: Jose GArcia\nIdade: 54 | Sexo: Masculino\nID: 20251121100833\nData: 21/11/2025 10:08\nResultados (TUG - segundos): Normal 10.4 [esperado~9.9; lim.sup~14.5 | Kear2017]; Motora 13.5 DTC 30%; Cognitiva 13.7 DTC 32%. Macro-fases: Normal levantar 2.1, marcha 6.1, sentar 2.2; Motora levantar 4.2, marcha 6.6, sentar 2.8; Cognitiva levantar 2.9, marcha 7.5, sentar 3.3. Sinalizadores automaticos: TUG acima do limite superior: nao; Triagem de quedas: OK; Dual-task cost: ALERTA >=20%; Velocidade media normal: 0.94 m/s; Nota velocidade: Velocidade discretamente baixa (0.8-1.0 m/s). Notas metodologicas: DTC >=10% atencao e >=20% alerta, interpretacao heuristica; Normas: <60a Kear 2017, >=60a Tromso 2021. Referencias: Kear 2017; Svinoy 2021; Lusardi 2017; Shumway-Cook 2000; Studenski 2011.",
       "patient": {
         "name": "Jose GArcia",
         "age_years": 54,
@@ -20,6 +36,7 @@
       },
       "assessment": {
         "performed_at": "2025-11-21T10:08:00-03:00",
+        "measure_unit": "seconds",
         "conditions": [
           {
             "code": "normal",
@@ -62,7 +79,11 @@
             }
           }
         ],
-        "flags": {
+        "derived_metrics": {
+          "worst_dual_task_cost_percent": 32,
+          "normal_walk_speed_mps": 0.94
+        },
+        "automated_flags": {
           "tug_above_upper_limit": false,
           "fall_screening": {
             "status": "OK",
@@ -77,10 +98,16 @@
               }
             ]
           },
-          "worst_dual_task_cost_percent": 32,
-          "dual_task_cost_status": "ALERTA >=20%",
-          "normal_walk_speed_mps": 0.94,
-          "walk_speed_note": "Velocidade discretamente baixa (0.8-1.0 m/s)."
+          "dual_task_cost": {
+            "status": "ALERTA",
+            "alert_threshold_percent": 20,
+            "worst_condition_code": "cognitive",
+            "worst_percent": 32
+          },
+          "gait_speed": {
+            "normal_condition_mps": 0.94,
+            "note": "Velocidade discretamente baixa (0.8-1.0 m/s)."
+          }
         },
         "methodology_notes": [
           "DTC (dual-task cost) 'Atencao' (>=10%) e 'Alerta' (>=20%) e heuristico; interpretar no contexto clinico.",
