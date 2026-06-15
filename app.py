@@ -11,7 +11,11 @@ from core.errors import (
 )
 from core.security import require_system_a, require_system_b
 from repositories.supabase_payload_repository import SupabasePayloadRepository
-from schemas.payload_examples import CVTUG_PAYLOAD_EXAMPLE, GENERIC_PAYLOAD_EXAMPLE
+from schemas.payload_examples import (
+    CVTUG_PAYLOAD_EXAMPLE,
+    EQUILIBRIO_PAYLOAD_EXAMPLE,
+    GENERIC_PAYLOAD_EXAMPLE,
+)
 from schemas.payload_schema import (
     CreatePayloadResponse,
     HealthResponse,
@@ -134,6 +138,10 @@ def health_check() -> HealthResponse:
                         "cvtug_payload": {
                             "summary": "Payload completo do integrador CvTUG",
                             "value": CVTUG_PAYLOAD_EXAMPLE,
+                        },
+                        "equilibrio_payload": {
+                            "summary": "Payload de avaliacao de equilibrio (posturografia VR)",
+                            "value": EQUILIBRIO_PAYLOAD_EXAMPLE,
                         },
                     },
                 }

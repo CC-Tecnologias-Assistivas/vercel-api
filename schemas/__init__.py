@@ -1,5 +1,9 @@
 
-from schemas.payload_examples import CVTUG_PAYLOAD_EXAMPLE, GENERIC_PAYLOAD_EXAMPLE
+from schemas.payload_examples import (
+    CVTUG_PAYLOAD_EXAMPLE,
+    EQUILIBRIO_PAYLOAD_EXAMPLE,
+    GENERIC_PAYLOAD_EXAMPLE,
+)
 from schemas.payload_schema import (
     CreatePayloadResponse,
     HealthResponse,
@@ -16,4 +20,5 @@ __all__ = [
     "RetrievePayloadResponse",
     "GENERIC_PAYLOAD_EXAMPLE",
     "CVTUG_PAYLOAD_EXAMPLE",
+    "EQUILIBRIO_PAYLOAD_EXAMPLE",
 ]

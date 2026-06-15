@@ -2,7 +2,11 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from schemas.payload_examples import CVTUG_PAYLOAD_EXAMPLE, GENERIC_PAYLOAD_EXAMPLE
+from schemas.payload_examples import (
+    CVTUG_PAYLOAD_EXAMPLE,
+    EQUILIBRIO_PAYLOAD_EXAMPLE,
+    GENERIC_PAYLOAD_EXAMPLE,
+)
 
 
 class CreatePayloadResponse(BaseModel):
@@ -41,6 +45,11 @@ class RetrievePayloadResponse(BaseModel):
                 {
                     "id": "payload_exemplo_cvtug",
                     "payload": CVTUG_PAYLOAD_EXAMPLE,
+                    "consumed": True,
+                },
+                {
+                    "id": "payload_exemplo_equilibrio",
+                    "payload": EQUILIBRIO_PAYLOAD_EXAMPLE,
                     "consumed": True,
                 },
             ]

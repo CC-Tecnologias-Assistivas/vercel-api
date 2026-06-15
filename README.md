@@ -142,16 +142,34 @@ python scripts/send_cvtug_payload.py \
   --system-a-key SUA_SYSTEM_A_API_KEY
 ```
 
+Para simular o envio de um relatorio de equilibrio (posturografia VR):
+
+```bash
+python scripts/send_equilibrio_payload.py \
+  --base-url https://telemedicinacc.vercel.app \
+  --system-a-key SUA_SYSTEM_A_API_KEY
+```
+
 Com o RehabEasy aberto, clique em `Atualizar`. O RehabEasy sera o Sistema B, buscara automaticamente o proximo payload pendente e consumira esse payload uma unica vez.
 
 Arquivos de referencia:
 
-- Schema padrao: `docs/cvtug_payload_schema.json`
-- Exemplo padrao: `examples/cvtug_payload_sample.json`
-- Extrator PDF -> JSON: `scripts/extract_cvtug_pdf.py`
+- Schema padrao CvTUG: `docs/cvtug_payload_schema.json`
+- Exemplo padrao CvTUG: `examples/cvtug_payload_sample.json`
+- Extrator CvTUG PDF -> JSON: `scripts/extract_cvtug_pdf.py`
+- Schema equilibrio: `docs/equilibrio_payload_schema.json`
+- Exemplo equilibrio: `examples/equilibrio_payload_sample.json`
+- Extrator equilibrio PDF -> JSON: `scripts/extract_equilibrio_pdf.py`
+- Envio equilibrio: `scripts/send_equilibrio_payload.py`
 
 Para extrair um payload estruturado diretamente de um PDF do CvTUG:
 
 ```bash
 python scripts/extract_cvtug_pdf.py "C:/caminho/CvTUG_Report.pdf" --output cvtug_payload.json
+```
+
+Para extrair um payload de equilibrio a partir do PDF:
+
+```bash
+python scripts/extract_equilibrio_pdf.py "C:/caminho/relatorio_equilibrio.pdf" --output equilibrio_payload.json
 ```

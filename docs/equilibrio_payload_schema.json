@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://telemedicinacc.vercel.app/schemas/equilibrio-payload.schema.json",
+  "title": "Relatorio de Equilibrio (Posturografia VR) para RehabEasy Transfer API",
+  "type": "object",
+  "required": ["source", "schema_version", "records"],
+  "properties": {
+    "source": {
+      "const": "posturografia-vr"
+    },
+    "schema_version": {
+      "type": "string",
+      "examples": ["1.0"]
+    },
+    "report_type": {
+      "const": "EQUILIBRIO"
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "sender",
+          "recipient",
+          "created_at",
+          "summary",
+          "content",
+          "patient",
+          "assessment"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "sender": { "type": "string" },
+          "recipient": { "type": "string" },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Resumo curto para listagem e triagem."
+          },
+          "content": {
+            "type": "string",
+            "description": "Narrativa curta legivel por humano."
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "patient": {
+            "type": "object",
+            "required": ["name", "age_years", "sex", "external_id"],
+            "properties": {
+              "name": { "type": "string" },
+              "age_years": { "type": "integer" },
+              "sex": { "type": "string" },
+              "external_id": { "type": "string" }
+            }
+          },
+          "assessment": {
+            "type": "object",
+            "required": [
+              "performed_at",
+              "exam_id",
+              "protocol",
+              "posturographic_indices",
+              "romberg_quotients",
+              "automated_flags"
+            ],
+            "properties": {
+              "performed_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "exam_id": { "type": "string" },
+              "evaluator": {
+                "type": ["string", "null"]
+              },
+              "protocol": {
+                "type": "object",
+                "properties": {
+                  "description": { "type": "string" },
+                  "eyes_conditions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["open", "closed"]
+                    }
+                  },
+                  "stance": { "type": "string" },
+                  "target_duration_seconds": { "type": "number" },
+                  "actual_duration_seconds": { "type": "number" }
+                }
+              },
+              "device": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string" },
+                  "model": { "type": "string" }
+                }
+              },
+              "posturographic_indices": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["code", "label", "value", "classification"],
+                  "properties": {
+                    "code": { "type": "string" },
+                    "label": { "type": "string" },
+                    "value": { "type": "number" },
+                    "unit": { "type": ["string", "null"] },
+                    "reference": {
+                      "type": ["object", "null"],
+                      "properties": {
+                        "mean": { "type": "number" },
+                        "sd": { "type": "number" }
+                      }
+                    },
+                    "classification": {
+                      "type": "string",
+                      "enum": [
+                        "within_expected",
+                        "above_expected",
+                        "below_expected",
+                        "borderline",
+                        "not_classified"
+                      ]
+                    }
+                  }
+                }
+              },
+              "romberg_quotients": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["code", "label", "value", "upper_limit", "classification"],
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": ["area", "trajectory", "velocity"]
+                    },
+                    "label": { "type": "string" },
+                    "value": { "type": "number" },
+                    "upper_limit": { "type": "number" },
+                    "classification": {
+                      "type": "string",
+                      "enum": [
+                        "within_expected",
+                        "above_expected",
+                        "below_expected",
+                        "borderline"
+                      ]
+                    }
+                  }
+                }
+              },
+              "derived_metrics": {
+                "type": "object",
+                "properties": {
+                  "ap_ml_ratio": { "type": "number" },
+                  "parameters_above_expected_count": { "type": "integer" },
+                  "parameters_borderline_count": { "type": "integer" },
+                  "spl_mm": { "type": "number" },
+                  "confidence_ellipse_95_area_mm2": { "type": "number" },
+                  "mean_oscillation_velocity_mm_s": { "type": "number" },
+                  "romberg_area_quotient": { "type": "number" }
+                }
+              },
+              "automated_flags": {
+                "type": "object",
+                "properties": {
+                  "increased_postural_sway": { "type": "boolean" },
+                  "visual_dependency": {
+                    "type": "object",
+                    "properties": {
+                      "status": { "type": "string" },
+                      "romberg_area_quotient": { "type": "number" },
+                      "threshold": { "type": "number" }
+                    }
+                  },
+                  "lateral_predominance": { "type": "boolean" },
+                  "acquisition_warnings": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              },
+              "interpretation": { "type": "string" },
+              "methodology_notes": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

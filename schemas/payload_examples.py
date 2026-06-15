@@ -118,3 +118,131 @@ CVTUG_PAYLOAD_EXAMPLE = {
         }
     ],
 }
+
+EQUILIBRIO_PAYLOAD_EXAMPLE = {
+    "source": "posturografia-vr",
+    "schema_version": "1.0",
+    "report_type": "EQUILIBRIO",
+    "records": [
+        {
+            "id": "equilibrio-20260610141907-20260610T141907",
+            "title": "Equilibrio - Gaga - 10/06/2026 14:19",
+            "sender": "Posturografia VR",
+            "recipient": "RehabEasy",
+            "created_at": "2026-06-10T14:19:07-03:00",
+            "summary": (
+                "SPL 273,1 mm; area 400,3 mm2; velocidade 23,55 mm/s; "
+                "Romberg area 2,39; 2 parametros acima do esperado; "
+                "predominio ML (AP/ML 0,67)."
+            ),
+            "content": (
+                "Avaliacao posturografica por trajetoria de headset VR com olhos "
+                "abertos e fechados. Dois parametros acima do esperado, com "
+                "quociente de Romberg pela area elevado (2,39), sugerindo maior "
+                "dependencia visual para o controle postural e predominio de "
+                "oscilacao medio-lateral."
+            ),
+            "tags": ["posturografia", "equilibrio", "vr", "romberg", "meta-quest"],
+            "patient": {
+                "name": "Gaga",
+                "age_years": 45,
+                "sex": "Masculino",
+                "external_id": "20260610141907",
+            },
+            "assessment": {
+                "performed_at": "2026-06-10T14:19:07-03:00",
+                "exam_id": "20260610141907",
+                "evaluator": None,
+                "protocol": {
+                    "description": "Olhos abertos e olhos fechados, base normal, ~30 s",
+                    "eyes_conditions": ["open", "closed"],
+                    "stance": "normal",
+                    "target_duration_seconds": 30,
+                    "actual_duration_seconds": 25,
+                },
+                "device": {
+                    "type": "vr_headset",
+                    "model": "Meta Quest 3",
+                },
+                "posturographic_indices": [
+                    {
+                        "code": "spl",
+                        "label": "Comprimento de trajetoria (SPL)",
+                        "value": 273.1,
+                        "unit": "mm",
+                        "reference": {"mean": 250, "sd": 116},
+                        "classification": "within_expected",
+                    },
+                    {
+                        "code": "confidence_ellipse_95_area",
+                        "label": "Area da elipse de confianca 95%",
+                        "value": 400.3,
+                        "unit": "mm2",
+                        "reference": {"mean": 125, "sd": 82},
+                        "classification": "above_expected",
+                    },
+                    {
+                        "code": "mean_oscillation_velocity",
+                        "label": "Velocidade media de oscilacao",
+                        "value": 23.55,
+                        "unit": "mm/s",
+                        "reference": {"mean": 9.2, "sd": 1.6},
+                        "classification": "above_expected",
+                    },
+                ],
+                "romberg_quotients": [
+                    {
+                        "code": "area",
+                        "label": "Quociente de Romberg — area (OF/OA)",
+                        "value": 2.39,
+                        "upper_limit": 2.0,
+                        "classification": "above_expected",
+                    },
+                    {
+                        "code": "trajectory",
+                        "label": "Quociente de Romberg — trajetoria (OF/OA)",
+                        "value": 0.9,
+                        "upper_limit": 2.0,
+                        "classification": "within_expected",
+                    },
+                    {
+                        "code": "velocity",
+                        "label": "Quociente de Romberg — velocidade (OF/OA)",
+                        "value": 0.47,
+                        "upper_limit": 2.0,
+                        "classification": "within_expected",
+                    },
+                ],
+                "derived_metrics": {
+                    "ap_ml_ratio": 0.67,
+                    "parameters_above_expected_count": 2,
+                    "parameters_borderline_count": 0,
+                    "spl_mm": 273.1,
+                    "confidence_ellipse_95_area_mm2": 400.3,
+                    "mean_oscillation_velocity_mm_s": 23.55,
+                    "romberg_area_quotient": 2.39,
+                },
+                "automated_flags": {
+                    "increased_postural_sway": True,
+                    "visual_dependency": {
+                        "status": "ALERTA",
+                        "romberg_area_quotient": 2.39,
+                        "threshold": 2.0,
+                    },
+                    "lateral_predominance": True,
+                    "acquisition_warnings": [
+                        "Duracao abaixo do recomendado (25 s)."
+                    ],
+                },
+                "interpretation": (
+                    "2 parametro(s) acima do esperado; Romberg area 2,39; "
+                    "predominio medio-lateral (AP/ML 0,67)."
+                ),
+                "methodology_notes": [
+                    "A aquisicao foi feita a partir da trajetoria da cabeca (headset VR).",
+                    "Priorizar indices relativos (Romberg, razao AP/ML).",
+                ],
+            },
+        }
+    ],
+}

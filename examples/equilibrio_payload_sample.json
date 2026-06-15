@@ -1,0 +1,216 @@
+{
+  "source": "posturografia-vr",
+  "schema_version": "1.0",
+  "report_type": "EQUILIBRIO",
+  "records": [
+    {
+      "id": "equilibrio-20260610141907-20260610T141907",
+      "title": "Equilibrio - Gaga - 10/06/2026 14:19",
+      "sender": "Posturografia VR",
+      "recipient": "RehabEasy",
+      "created_at": "2026-06-10T14:19:07-03:00",
+      "summary": "SPL 273,1 mm; area 400,3 mm2; velocidade 23,55 mm/s; Romberg area 2,39; 2 parametros acima do esperado; predomínio ML (AP/ML 0,67).",
+      "content": "Avaliacao posturografica por trajetoria de headset VR com olhos abertos e fechados. Dois parametros acima do esperado, com quociente de Romberg pela area elevado (2,39), sugerindo maior dependencia visual para o controle postural e predomínio de oscilacao medio-lateral.",
+      "tags": [
+        "posturografia",
+        "equilibrio",
+        "vr",
+        "romberg",
+        "meta-quest"
+      ],
+      "patient": {
+        "name": "Gaga",
+        "age_years": 45,
+        "sex": "Masculino",
+        "external_id": "20260610141907"
+      },
+      "assessment": {
+        "performed_at": "2026-06-10T14:19:07-03:00",
+        "exam_id": "20260610141907",
+        "evaluator": null,
+        "protocol": {
+          "description": "Olhos abertos e olhos fechados, base normal, ~30 s",
+          "eyes_conditions": ["open", "closed"],
+          "stance": "normal",
+          "target_duration_seconds": 30,
+          "actual_duration_seconds": 25
+        },
+        "device": {
+          "type": "vr_headset",
+          "model": "Meta Quest 3"
+        },
+        "posturographic_indices": [
+          {
+            "code": "spl",
+            "label": "Comprimento de trajetoria (SPL)",
+            "value": 273.1,
+            "unit": "mm",
+            "reference": { "mean": 250, "sd": 116 },
+            "classification": "within_expected"
+          },
+          {
+            "code": "confidence_ellipse_95_area",
+            "label": "Area da elipse de confianca 95%",
+            "value": 400.3,
+            "unit": "mm2",
+            "reference": { "mean": 125, "sd": 82 },
+            "classification": "above_expected"
+          },
+          {
+            "code": "mean_oscillation_velocity",
+            "label": "Velocidade media de oscilacao",
+            "value": 23.55,
+            "unit": "mm/s",
+            "reference": { "mean": 9.2, "sd": 1.6 },
+            "classification": "above_expected"
+          },
+          {
+            "code": "mdist",
+            "label": "Deslocamento radial medio (MDIST)",
+            "value": 6.06,
+            "unit": null,
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "rdist",
+            "label": "RMS radial (RDIST)",
+            "value": 7.02,
+            "unit": null,
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "rms_ap",
+            "label": "RMS antero-posterior (AP)",
+            "value": 3.89,
+            "unit": "mm",
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "rms_ml",
+            "label": "RMS medio-lateral (ML)",
+            "value": 5.84,
+            "unit": "mm",
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "amplitude_ap",
+            "label": "Amplitude AP (pico-a-pico)",
+            "value": 20.4,
+            "unit": "mm",
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "amplitude_ml",
+            "label": "Amplitude ML (pico-a-pico)",
+            "value": 26.0,
+            "unit": "mm",
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "ap_ml_ratio",
+            "label": "Razao direcional AP/ML",
+            "value": 0.67,
+            "unit": null,
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "mean_frequency",
+            "label": "Frequencia media",
+            "value": 0.619,
+            "unit": "Hz",
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "vertical_head_rms",
+            "label": "Oscilacao vertical da cabeca (RMS)",
+            "value": 2.41,
+            "unit": "mm",
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "angular_pitch",
+            "label": "Oscilacao angular — inclinacao (pitch)",
+            "value": 0.0,
+            "unit": "deg",
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "angular_roll",
+            "label": "Oscilacao angular — lateral (roll)",
+            "value": 0.0,
+            "unit": "deg",
+            "reference": null,
+            "classification": "not_classified"
+          },
+          {
+            "code": "angular_yaw",
+            "label": "Oscilacao angular — rotacao (yaw)",
+            "value": 0.0,
+            "unit": "deg",
+            "reference": null,
+            "classification": "not_classified"
+          }
+        ],
+        "romberg_quotients": [
+          {
+            "code": "area",
+            "label": "Quociente de Romberg — area (OF/OA)",
+            "value": 2.39,
+            "upper_limit": 2.0,
+            "classification": "above_expected"
+          },
+          {
+            "code": "trajectory",
+            "label": "Quociente de Romberg — trajetoria (OF/OA)",
+            "value": 0.9,
+            "upper_limit": 2.0,
+            "classification": "within_expected"
+          },
+          {
+            "code": "velocity",
+            "label": "Quociente de Romberg — velocidade (OF/OA)",
+            "value": 0.47,
+            "upper_limit": 2.0,
+            "classification": "within_expected"
+          }
+        ],
+        "derived_metrics": {
+          "ap_ml_ratio": 0.67,
+          "parameters_above_expected_count": 2,
+          "parameters_borderline_count": 0,
+          "spl_mm": 273.1,
+          "confidence_ellipse_95_area_mm2": 400.3,
+          "mean_oscillation_velocity_mm_s": 23.55,
+          "romberg_area_quotient": 2.39
+        },
+        "automated_flags": {
+          "increased_postural_sway": true,
+          "visual_dependency": {
+            "status": "ALERTA",
+            "romberg_area_quotient": 2.39,
+            "threshold": 2.0
+          },
+          "lateral_predominance": true,
+          "acquisition_warnings": [
+            "Duracao abaixo do recomendado (25 s)."
+          ]
+        },
+        "interpretation": "2 parametro(s) encontram-se acima do esperado e 0 em faixa limitrofe, compativeis com oscilacao postural aumentada. O quociente de Romberg pela area foi de 2,39, acima do limite usual (< 2,0), sugerindo maior dependencia da informacao visual para o controle postural. Observa-se predominio de oscilacao medio-lateral (razao AP/ML = 0,67). Esta analise e de apoio e nao substitui o julgamento clinico nem exames complementares.",
+        "methodology_notes": [
+          "A aquisicao foi feita a partir da trajetoria da cabeca (headset VR).",
+          "Os limiares normativos de plataforma de forca devem ser tratados como INDICATIVOS; priorizar indices relativos (Romberg, razao AP/ML)."
+        ]
+      }
+    }
+  ]
+}

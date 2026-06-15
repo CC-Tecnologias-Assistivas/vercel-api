@@ -68,6 +68,13 @@ Para payloads do CvTUG:
 - Nao inclua `source_document`, `references` ou citacoes academicas no payload padrao.
 - Se houver necessidade de auditoria, trate isso como extensao interna do sistema de origem, nao como parte do modelo padrao.
 
+Para payloads de equilibrio (posturografia VR):
+
+- Use `report_type: "EQUILIBRIO"` e `source: "posturografia-vr"`.
+- Guarde indices em `assessment.posturographic_indices` e quocientes em `assessment.romberg_quotients`.
+- Use `assessment.interpretation` para o texto clinico resumido.
+- Priorize `derived_metrics` e `automated_flags` para triagem automatica no RehabEasy.
+
 Arquivos de apoio:
 
 - Schema generico recomendado: [docs/recommended_payload_schema.json](/C:/Users/Chari/dev/CC/vercel-api/docs/recommended_payload_schema.json)
@@ -75,6 +82,9 @@ Arquivos de apoio:
 - Schema CvTUG: [docs/cvtug_payload_schema.json](/C:/Users/Chari/dev/CC/vercel-api/docs/cvtug_payload_schema.json)
 - Exemplo CvTUG: [examples/cvtug_payload_sample.json](/C:/Users/Chari/dev/CC/vercel-api/examples/cvtug_payload_sample.json)
 - Extrator CvTUG PDF -> JSON: [scripts/extract_cvtug_pdf.py](/C:/Users/Chari/dev/CC/vercel-api/scripts/extract_cvtug_pdf.py)
+- Schema equilibrio: [docs/equilibrio_payload_schema.json](/C:/Users/Chari/dev/CC/vercel-api/docs/equilibrio_payload_schema.json)
+- Exemplo equilibrio: [examples/equilibrio_payload_sample.json](/C:/Users/Chari/dev/CC/vercel-api/examples/equilibrio_payload_sample.json)
+- Extrator equilibrio PDF -> JSON: [scripts/extract_equilibrio_pdf.py](/C:/Users/Chari/dev/CC/vercel-api/scripts/extract_equilibrio_pdf.py)
 
 ## Publicacao do payload
 
