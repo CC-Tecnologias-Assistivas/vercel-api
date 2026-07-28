@@ -1,4 +1,6 @@
 fastapi
 httpx
 pydantic
+pypdf
+python-multipart
 uvicorn[standard]

@@ -19,35 +19,93 @@ class SupabasePayloadRepository:
         expires_at: datetime,
         source: str,
         payload: dict[str, Any],
+        pdf_path: str | None = None,
+        report_type: str | None = None,
     ) -> None:
+        body: dict[str, Any] = {
+            "id": payload_id,
+            "created_at": self._format_timestamp(created_at),
+            "expires_at": self._format_timestamp(expires_at),
+            "source": source,
+            "payload": payload,
+        }
+        if pdf_path is not None:
+            body["pdf_path"] = pdf_path
+        if report_type is not None:
+            body["report_type"] = report_type
+
         response = self._request(
             "POST",
             "",
-            json={
-                "id": payload_id,
-                "created_at": self._format_timestamp(created_at),
-                "expires_at": self._format_timestamp(expires_at),
-                "source": source,
-                "payload": payload,
-            },
+            json=body,
             headers={"Prefer": "return=minimal"},
         )
-        if response.status_code not in (200, 201, 204):
-            raise PayloadStoreUnavailableError(response.text)
+        if response.status_code in (200, 201, 204):
+            return
+
+        # Fallback when optional PDF columns are not migrated yet.
+        if pdf_path is not None or report_type is not None:
+            fallback_payload = dict(payload)
+            if pdf_path is not None:
+                fallback_payload["pdf_storage_path"] = pdf_path
+            if report_type is not None:
+                fallback_payload["report_type"] = report_type
+
+            fallback_response = self._request(
+                "POST",
+                "",
+                json={
+                    "id": payload_id,
+                    "created_at": self._format_timestamp(created_at),
+                    "expires_at": self._format_timestamp(expires_at),
+                    "source": source,
+                    "payload": fallback_payload,
+                },
+                headers={"Prefer": "return=minimal"},
+            )
+            if fallback_response.status_code in (200, 201, 204):
+                return
+            raise PayloadStoreUnavailableError(fallback_response.text)
+
+        raise PayloadStoreUnavailableError(response.text)
 
     def consume_payload(self, payload_id: str, consumed_at: datetime) -> dict[str, Any] | None:
+        row = self._consume_with_select(
+            payload_id=payload_id,
+            consumed_at=consumed_at,
+            select="id,payload,pdf_path,report_type",
+        )
+        if row is not None:
+            return row
+
+        # Columns may not exist yet; retry with legacy select.
+        return self._consume_with_select(
+            payload_id=payload_id,
+            consumed_at=consumed_at,
+            select="id,payload",
+        )
+
+    def _consume_with_select(
+        self,
+        payload_id: str,
+        consumed_at: datetime,
+        select: str,
+    ) -> dict[str, Any] | None:
         response = self._request(
             "PATCH",
             (
                 f"?id=eq.{quote(payload_id)}"
                 "&consumed_at=is.null"
                 f"&expires_at=gt.{quote(self._format_timestamp(datetime.now(timezone.utc)))}"
-                "&select=id,payload"
+                f"&select={select}"
             ),
             json={"consumed_at": self._format_timestamp(consumed_at)},
             headers={"Prefer": "return=representation"},
         )
         if response.status_code != 200:
+            # Unknown column / schema mismatch -> signal caller to try fallback.
+            if "pdf_path" in select or "report_type" in select:
+                return None
             raise PayloadStoreUnavailableError(response.text)
 
         rows = response.json()

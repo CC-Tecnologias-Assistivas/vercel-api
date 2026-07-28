@@ -33,6 +33,13 @@ class RetrievePayloadResponse(BaseModel):
     consumed: bool = Field(
         default=True, description="Sempre true quando a leitura for bem-sucedida."
     )
+    pdf_url: str | None = Field(
+        default=None,
+        description=(
+            "URL assinada temporaria do PDF associado, quando o payload "
+            "foi publicado via upload de PDF."
+        ),
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -41,16 +48,22 @@ class RetrievePayloadResponse(BaseModel):
                     "id": "payload_exemplo_generico",
                     "payload": GENERIC_PAYLOAD_EXAMPLE,
                     "consumed": True,
+                    "pdf_url": None,
                 },
                 {
                     "id": "payload_exemplo_cvtug",
                     "payload": CVTUG_PAYLOAD_EXAMPLE,
                     "consumed": True,
+                    "pdf_url": (
+                        "https://uhkydwfzfionuaiiqirj.supabase.co/storage/v1/object/sign/"
+                        "payload-pdfs/payload_x/file.pdf?token=..."
+                    ),
                 },
                 {
                     "id": "payload_exemplo_equilibrio",
                     "payload": EQUILIBRIO_PAYLOAD_EXAMPLE,
                     "consumed": True,
+                    "pdf_url": None,
                 },
             ]
         }

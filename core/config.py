@@ -11,10 +11,13 @@ class Settings:
     supabase_url: str
     supabase_service_role_key: str
     supabase_payloads_table: str
+    supabase_pdf_bucket: str
     system_a_api_key: str
     system_b_api_key: str
     payload_ttl_seconds: int = 1800
     max_payload_bytes: int = 1_048_576
+    max_pdf_bytes: int = 10_485_760
+    pdf_signed_url_seconds: int = 1800
     environment: str = "production"
 
     @classmethod
@@ -23,10 +26,13 @@ class Settings:
             supabase_url=os.getenv("SUPABASE_URL", ""),
             supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
             supabase_payloads_table=os.getenv("SUPABASE_PAYLOADS_TABLE", "payloads"),
+            supabase_pdf_bucket=os.getenv("SUPABASE_PDF_BUCKET", "payload-pdfs"),
             system_a_api_key=os.getenv("SYSTEM_A_API_KEY", DEFAULT_SYSTEM_A_API_KEY),
             system_b_api_key=os.getenv("SYSTEM_B_API_KEY", DEFAULT_SYSTEM_B_API_KEY),
             payload_ttl_seconds=_get_int_env("PAYLOAD_TTL_SECONDS", 1800),
             max_payload_bytes=_get_int_env("MAX_PAYLOAD_BYTES", 1_048_576),
+            max_pdf_bytes=_get_int_env("MAX_PDF_BYTES", 10_485_760),
+            pdf_signed_url_seconds=_get_int_env("PDF_SIGNED_URL_SECONDS", 1800),
             environment=os.getenv("ENVIRONMENT", "production"),
         )
 

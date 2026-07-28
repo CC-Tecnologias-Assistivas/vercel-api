@@ -4,12 +4,19 @@ Este documento mostra como conectar um terceiro sistema a API que publica payloa
 
 ## Visao geral
 
-Fluxo esperado:
+Fluxo esperado (JSON):
 
 1. O sistema de origem monta um JSON.
 2. O sistema de origem envia esse JSON para `POST /api/payloads`.
 3. A API salva o payload no Supabase com TTL.
 4. O RehabEasy ou outro Sistema B consome uma unica vez com `GET /api/payloads/{id}` ou `GET /api/payloads/next`.
+
+Fluxo esperado (PDF CvTUG / equilibrio):
+
+1. O sistema de origem envia o PDF em `POST /api/payloads/pdf` (`multipart/form-data`, campo `file`).
+2. A API extrai o JSON, guarda o PDF no Storage e salva o payload com TTL.
+3. No consumo, a resposta inclui `payload` e `pdf_url` (URL assinada).
+4. O RehabEasy exibe o PDF e os graficos gerados a partir do JSON extraido.
 
 ## Autenticacao
 
@@ -108,6 +115,20 @@ Resposta esperada:
 ```
 
 Guarde o `id` retornado se o sistema precisar rastrear o payload depois.
+
+## Publicacao de PDF
+
+```bash
+curl -X POST https://telemedicinacc.vercel.app/api/payloads/pdf \
+  -H "X-API-KEY: SUA_SYSTEM_A_API_KEY" \
+  -F "file=@C:/caminho/relatorio.pdf;type=application/pdf"
+```
+
+A API tenta extrair automaticamente CvTUG e, se falhar, equilibrio. Em sucesso devolve o mesmo envelope de criacao (`id`, TTL).
+
+Script auxiliar: [scripts/send_pdf_payload.py](/C:/Users/Chari/dev/CC/vercel-api/scripts/send_pdf_payload.py)
+
+SQL do Storage/colunas: [docs/sql/add_payload_pdf_support.sql](/C:/Users/Chari/dev/CC/vercel-api/docs/sql/add_payload_pdf_support.sql)
 
 ## Consulta de status
 

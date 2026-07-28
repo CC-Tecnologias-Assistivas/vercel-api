@@ -2,6 +2,10 @@ class PayloadApiError(Exception):
     pass
 
 
+class PayloadExtractionError(PayloadApiError):
+    pass
+
+
 class PayloadTooLargeError(PayloadApiError):
     pass
 

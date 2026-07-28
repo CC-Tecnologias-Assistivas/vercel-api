@@ -8,11 +8,14 @@ O armazenamento transacional fica no Supabase/Postgres. O consumo unico e feito 
 
 - `GET /api/health`
 - `POST /api/payloads`
+- `POST /api/payloads/pdf`
 - `GET /api/payloads/next`
 - `GET /api/payloads/{id}`
 - `GET /api/payloads/{id}/status`
 
 ## Fluxo recomendado
+
+### JSON (legado / compatibilidade)
 
 1. O sistema publicador monta um JSON com `source`, `schema_version` e `records`.
 2. O sistema publicador envia para `POST /api/payloads` com `X-API-KEY` do Sistema A.
@@ -20,18 +23,28 @@ O armazenamento transacional fica no Supabase/Postgres. O consumo unico e feito 
 4. O RehabEasy ou outro consumidor usa `GET /api/payloads/{id}` ou `GET /api/payloads/next` com a chave do Sistema B.
 5. A primeira leitura bem-sucedida consome o payload. Leituras seguintes retornam `404`.
 
+### PDF (CvTUG / equilibrio)
+
+1. O sistema publicador envia o PDF em `POST /api/payloads/pdf` (`multipart/form-data`, campo `file`).
+2. A API detecta o tipo, extrai o JSON estruturado e guarda o PDF no Supabase Storage (`payload-pdfs`).
+3. No consumo, a resposta inclui `payload` + `pdf_url` (URL assinada temporaria).
+4. O RehabEasy baixa o PDF, exibe no viewer e monta os graficos a partir do JSON extraido.
+
 ## Variaveis de ambiente
 
 Copie `.env.example` e configure os valores na Vercel:
 
 ```env
-SUPABASE_URL=
+SUPABASE_URL=https://uhkydwfzfionuaiiqirj.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PAYLOADS_TABLE=payloads
+SUPABASE_PDF_BUCKET=payload-pdfs
 SYSTEM_A_API_KEY=sistema-mobile
 SYSTEM_B_API_KEY=rehabeasy-sistema
 PAYLOAD_TTL_SECONDS=1800
 MAX_PAYLOAD_BYTES=1048576
+MAX_PDF_BYTES=10485760
+PDF_SIGNED_URL_SECONDS=1800
 ENVIRONMENT=production
 ```
 
@@ -61,6 +74,10 @@ create table if not exists public.payloads (
 create index if not exists idx_payloads_expires_at on public.payloads (expires_at);
 create index if not exists idx_payloads_consumed_at on public.payloads (consumed_at);
 ```
+
+Para suporte a PDF, rode tambem [`docs/sql/add_payload_pdf_support.sql`](docs/sql/add_payload_pdf_support.sql)
+(colunas `pdf_path` / `report_type` + bucket privado `payload-pdfs`).
+A API tambem tenta criar o bucket automaticamente no primeiro upload.
 
 ## Rodar localmente
 
@@ -146,6 +163,14 @@ Para simular o envio de um relatorio de equilibrio (posturografia VR):
 
 ```bash
 python scripts/send_equilibrio_payload.py \
+  --base-url https://telemedicinacc.vercel.app \
+  --system-a-key SUA_SYSTEM_A_API_KEY
+```
+
+Para enviar um PDF real (CvTUG ou equilibrio):
+
+```bash
+python scripts/send_pdf_payload.py "C:/caminho/relatorio.pdf" \
   --base-url https://telemedicinacc.vercel.app \
   --system-a-key SUA_SYSTEM_A_API_KEY
 ```
