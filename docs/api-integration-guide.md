@@ -11,7 +11,7 @@ Fluxo esperado (JSON):
 3. A API salva o payload no Supabase com TTL.
 4. O RehabEasy ou outro Sistema B consome uma unica vez com `GET /api/payloads/{id}` ou `GET /api/payloads/next`.
 
-Fluxo esperado (PDF CvTUG / equilibrio):
+Fluxo esperado (PDF CvTUG / equilibrio / Index-Index):
 
 1. O sistema de origem envia o PDF em `POST /api/payloads/pdf` (`multipart/form-data`, campo `file`).
 2. A API extrai o JSON, guarda o PDF no Storage e salva o payload com TTL.
@@ -82,6 +82,13 @@ Para payloads de equilibrio (posturografia VR):
 - Use `assessment.interpretation` para o texto clinico resumido.
 - Priorize `derived_metrics` e `automated_flags` para triagem automatica no RehabEasy.
 
+Para payloads Index-Index (coordenacao motora fina VR):
+
+- Use `report_type: "INDEX_INDEX"` e `source: "index-index"`.
+- Guarde os resultados brutos em `assessment.metrics`.
+- Use `assessment.derived_metrics` para toque, assimetria e lado dominante.
+- Use `assessment.automated_flags.hand_asymmetry` para a classificacao da assimetria.
+
 Arquivos de apoio:
 
 - Schema generico recomendado: [docs/recommended_payload_schema.json](/C:/Users/Chari/dev/CC/vercel-api/docs/recommended_payload_schema.json)
@@ -92,6 +99,9 @@ Arquivos de apoio:
 - Schema equilibrio: [docs/equilibrio_payload_schema.json](/C:/Users/Chari/dev/CC/vercel-api/docs/equilibrio_payload_schema.json)
 - Exemplo equilibrio: [examples/equilibrio_payload_sample.json](/C:/Users/Chari/dev/CC/vercel-api/examples/equilibrio_payload_sample.json)
 - Extrator equilibrio PDF -> JSON: [scripts/extract_equilibrio_pdf.py](/C:/Users/Chari/dev/CC/vercel-api/scripts/extract_equilibrio_pdf.py)
+- Schema Index-Index: [docs/indexindex_payload_schema.json](/C:/Users/Chari/dev/CC/vercel-api/docs/indexindex_payload_schema.json)
+- Exemplo Index-Index: [examples/indexindex_payload_sample.json](/C:/Users/Chari/dev/CC/vercel-api/examples/indexindex_payload_sample.json)
+- Extrator Index-Index PDF -> JSON: [scripts/extract_indexindex_pdf.py](/C:/Users/Chari/dev/CC/vercel-api/scripts/extract_indexindex_pdf.py)
 
 ## Publicacao do payload
 
@@ -124,7 +134,7 @@ curl -X POST https://telemedicinacc.vercel.app/api/payloads/pdf \
   -F "file=@C:/caminho/relatorio.pdf;type=application/pdf"
 ```
 
-A API tenta extrair automaticamente CvTUG e, se falhar, equilibrio. Em sucesso devolve o mesmo envelope de criacao (`id`, TTL).
+A API tenta extrair automaticamente CvTUG, equilibrio e Index-Index. Em sucesso devolve o mesmo envelope de criacao (`id`, TTL).
 
 Script auxiliar: [scripts/send_pdf_payload.py](/C:/Users/Chari/dev/CC/vercel-api/scripts/send_pdf_payload.py)
 

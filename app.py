@@ -17,6 +17,7 @@ from schemas.payload_examples import (
     CVTUG_PAYLOAD_EXAMPLE,
     EQUILIBRIO_PAYLOAD_EXAMPLE,
     GENERIC_PAYLOAD_EXAMPLE,
+    INDEX_INDEX_PAYLOAD_EXAMPLE,
 )
 from schemas.payload_schema import (
     CreatePayloadResponse,
@@ -33,11 +34,11 @@ app = FastAPI(
     description=(
         "API para transferencia temporaria de payloads JSON e PDF entre sistemas. "
         "O Sistema A publica com `POST /api/payloads` (JSON) ou "
-        "`POST /api/payloads/pdf` (PDF CvTUG/equilibrio), o Sistema B consome "
+        "`POST /api/payloads/pdf` (PDF CvTUG/equilibrio/Index-Index), o Sistema B consome "
         "uma unica vez com `GET /api/payloads/{id}` ou `GET /api/payloads/next`, "
         "e o Supabase controla expiracao, Storage do PDF e consumo unico."
     ),
-    version="1.6.0",
+    version="1.7.0",
 )
 
 
@@ -162,6 +163,10 @@ def health_check() -> HealthResponse:
                             "summary": "Payload de avaliacao de equilibrio (posturografia VR)",
                             "value": EQUILIBRIO_PAYLOAD_EXAMPLE,
                         },
+                        "indexindex_payload": {
+                            "summary": "Payload Index-Index (coordenacao motora fina VR)",
+                            "value": INDEX_INDEX_PAYLOAD_EXAMPLE,
+                        },
                     },
                 }
             },
@@ -181,7 +186,7 @@ async def create_payload(
     response_model=CreatePayloadResponse,
     status_code=status.HTTP_201_CREATED,
     tags=["payloads"],
-    summary="Publica um PDF CvTUG ou equilibrio",
+    summary="Publica um PDF CvTUG, equilibrio ou Index-Index",
     description=(
         "Uso exclusivo do Sistema A. Envie `multipart/form-data` com o campo "
         "`file` contendo o PDF. A API extrai o JSON estruturado, guarda o PDF "
@@ -189,7 +194,9 @@ async def create_payload(
     ),
 )
 async def create_payload_from_pdf(
-    file: UploadFile = File(..., description="PDF do relatorio CvTUG ou equilibrio"),
+    file: UploadFile = File(
+        ..., description="PDF do relatorio CvTUG, equilibrio ou Index-Index"
+    ),
     _: None = Depends(require_system_a),
     service: PayloadService = Depends(get_payload_service),
 ) -> CreatePayloadResponse:

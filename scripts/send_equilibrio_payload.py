@@ -10,7 +10,7 @@ from pathlib import Path
 DEFAULT_PAYLOAD_PATH = (
     Path(__file__).resolve().parents[1] / "examples" / "equilibrio_payload_sample.json"
 )
-DEFAULT_SYSTEM_A_API_KEY = "sistema-mobile"
+DEFAULT_SYSTEM_A_API_KEY = "rehabeasy-system-a"
 
 
 def main() -> int:

@@ -246,3 +246,72 @@ EQUILIBRIO_PAYLOAD_EXAMPLE = {
         }
     ],
 }
+
+
+INDEX_INDEX_PAYLOAD_EXAMPLE = {
+    "source": "index-index",
+    "schema_version": "1.0",
+    "report_type": "INDEX_INDEX",
+    "records": [
+        {
+            "id": "indexindex-R97o807t870-20260729T191900",
+            "title": "Index-Index - teste - 29/07/2026 19:19",
+            "sender": "Index-Index",
+            "recipient": "RehabEasy",
+            "created_at": "2026-07-29T19:19:00-03:00",
+            "summary": (
+                "Distancia final 3.2 mm (limiar 15.0 mm); duracao 15.32 s; "
+                "oscilacao E 1.9 / D 29.9 / geral 28.8 mm."
+            ),
+            "content": "Toque dentro do limiar; assimetria com maior oscilacao na mao direita.",
+            "tags": ["index-index", "coordenacao-motora-fina", "vr", "dedos-indicadores"],
+            "patient": {
+                "name": "teste",
+                "age_years": 95,
+                "sex": "Masculino",
+                "external_id": "R97o807t870",
+            },
+            "assessment": {
+                "performed_at": "2026-07-29T19:19:00-03:00",
+                "exam_id": "R97o807t870",
+                "test_type": "INDEX_INDEX",
+                "protocol": {
+                    "description": "Coordenacao motora fina - aproximacao das pontas dos dedos indicadores (VR)",
+                    "closing_criterion": "Toque efetivo entre as pontas dos dedos",
+                    "touch_threshold_mm": 15.0,
+                    "guide_line_length_mm": 426.6,
+                },
+                "metrics": {
+                    "final_fingertip_distance_mm": 3.2,
+                    "movement_duration_seconds": 15.32,
+                    "guide_line_length_mm": 426.6,
+                    "left_hand_oscillation_sd_mm": 1.9,
+                    "right_hand_oscillation_sd_mm": 29.9,
+                    "overall_oscillation_sd_mm": 28.8,
+                    "touch_threshold_mm": 15.0,
+                },
+                "derived_metrics": {
+                    "touch_achieved": True,
+                    "asymmetry_ratio": 15.74,
+                    "dominant_oscillation_side": "right",
+                    "final_fingertip_distance_mm": 3.2,
+                    "overall_oscillation_sd_mm": 28.8,
+                    "left_hand_oscillation_sd_mm": 1.9,
+                    "right_hand_oscillation_sd_mm": 29.9,
+                    "movement_duration_seconds": 15.32,
+                },
+                "automated_flags": {
+                    "touch_within_threshold": True,
+                    "hand_asymmetry": {
+                        "status": "ALERTA",
+                        "ratio": 15.74,
+                        "threshold": 3.0,
+                        "dominant_side": "right",
+                    },
+                },
+                "interpretation": "Toque dentro do limiar; assimetria com maior oscilacao na mao direita.",
+                "methodology_notes": ["A reta-guia permanece fixa no espaco durante o teste."],
+            },
+        }
+    ],
+}

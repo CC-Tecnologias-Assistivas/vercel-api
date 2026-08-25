@@ -3,6 +3,7 @@ from schemas.payload_examples import (
     CVTUG_PAYLOAD_EXAMPLE,
     EQUILIBRIO_PAYLOAD_EXAMPLE,
     GENERIC_PAYLOAD_EXAMPLE,
+    INDEX_INDEX_PAYLOAD_EXAMPLE,
 )
 from schemas.payload_schema import (
     CreatePayloadResponse,
@@ -21,4 +22,5 @@ __all__ = [
     "GENERIC_PAYLOAD_EXAMPLE",
     "CVTUG_PAYLOAD_EXAMPLE",
     "EQUILIBRIO_PAYLOAD_EXAMPLE",
+    "INDEX_INDEX_PAYLOAD_EXAMPLE",
 ]

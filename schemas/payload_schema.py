@@ -6,6 +6,7 @@ from schemas.payload_examples import (
     CVTUG_PAYLOAD_EXAMPLE,
     EQUILIBRIO_PAYLOAD_EXAMPLE,
     GENERIC_PAYLOAD_EXAMPLE,
+    INDEX_INDEX_PAYLOAD_EXAMPLE,
 )
 
 
@@ -62,6 +63,12 @@ class RetrievePayloadResponse(BaseModel):
                 {
                     "id": "payload_exemplo_equilibrio",
                     "payload": EQUILIBRIO_PAYLOAD_EXAMPLE,
+                    "consumed": True,
+                    "pdf_url": None,
+                },
+                {
+                    "id": "payload_exemplo_index_index",
+                    "payload": INDEX_INDEX_PAYLOAD_EXAMPLE,
                     "consumed": True,
                     "pdf_url": None,
                 },

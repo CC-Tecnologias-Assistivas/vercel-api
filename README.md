@@ -23,7 +23,7 @@ O armazenamento transacional fica no Supabase/Postgres. O consumo unico e feito 
 4. O RehabEasy ou outro consumidor usa `GET /api/payloads/{id}` ou `GET /api/payloads/next` com a chave do Sistema B.
 5. A primeira leitura bem-sucedida consome o payload. Leituras seguintes retornam `404`.
 
-### PDF (CvTUG / equilibrio)
+### PDF (CvTUG / equilibrio / Index-Index)
 
 1. O sistema publicador envia o PDF em `POST /api/payloads/pdf` (`multipart/form-data`, campo `file`).
 2. A API detecta o tipo, extrai o JSON estruturado e guarda o PDF no Supabase Storage (`payload-pdfs`).
@@ -39,8 +39,8 @@ SUPABASE_URL=https://uhkydwfzfionuaiiqirj.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PAYLOADS_TABLE=payloads
 SUPABASE_PDF_BUCKET=payload-pdfs
-SYSTEM_A_API_KEY=sistema-mobile
-SYSTEM_B_API_KEY=rehabeasy-sistema
+SYSTEM_A_API_KEY=rehabeasy-system-a
+SYSTEM_B_API_KEY=rehabeasy-system-b
 PAYLOAD_TTL_SECONDS=1800
 MAX_PAYLOAD_BYTES=1048576
 MAX_PDF_BYTES=10485760
@@ -52,8 +52,8 @@ Use a service role key somente no backend/Vercel. Nao exponha essa chave no Reha
 
 Sugestao de nomes para as chaves:
 
-- `SYSTEM_A_API_KEY=sistema-mobile`
-- `SYSTEM_B_API_KEY=rehabeasy-sistema`
+- `SYSTEM_A_API_KEY=rehabeasy-system-a`
+- `SYSTEM_B_API_KEY=rehabeasy-system-b`
 
 Nao existe migration SQL para essa troca. Basta atualizar as variaveis de ambiente na Vercel e a configuracao do consumidor.
 
@@ -103,6 +103,8 @@ Guias e contratos:
 - Exemplo generico: `examples/generic_payload_sample.json`
 - Schema CvTUG: `docs/cvtug_payload_schema.json`
 - Exemplo CvTUG: `examples/cvtug_payload_sample.json`
+- Schema Index-Index: `docs/indexindex_payload_schema.json`
+- Exemplo Index-Index: `examples/indexindex_payload_sample.json`
 
 ## Exemplos
 
@@ -167,7 +169,7 @@ python scripts/send_equilibrio_payload.py \
   --system-a-key SUA_SYSTEM_A_API_KEY
 ```
 
-Para enviar um PDF real (CvTUG ou equilibrio):
+Para enviar um PDF real (CvTUG, equilibrio ou Index-Index):
 
 ```bash
 python scripts/send_pdf_payload.py "C:/caminho/relatorio.pdf" \
@@ -186,6 +188,7 @@ Arquivos de referencia:
 - Exemplo equilibrio: `examples/equilibrio_payload_sample.json`
 - Extrator equilibrio PDF -> JSON: `scripts/extract_equilibrio_pdf.py`
 - Envio equilibrio: `scripts/send_equilibrio_payload.py`
+- Extrator Index-Index PDF -> JSON: `scripts/extract_indexindex_pdf.py`
 
 Para extrair um payload estruturado diretamente de um PDF do CvTUG:
 
@@ -197,4 +200,10 @@ Para extrair um payload de equilibrio a partir do PDF:
 
 ```bash
 python scripts/extract_equilibrio_pdf.py "C:/caminho/relatorio_equilibrio.pdf" --output equilibrio_payload.json
+```
+
+Para extrair um payload de Index-Index a partir do PDF:
+
+```bash
+python scripts/extract_indexindex_pdf.py "C:/caminho/IndexIndex_Report.pdf" --output indexindex_payload.json
 ```

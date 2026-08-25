@@ -8,7 +8,7 @@ import httpx
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Envia um PDF CvTUG ou equilibrio para POST /api/payloads/pdf."
+        description="Envia um PDF CvTUG, equilibrio ou Index-Index para POST /api/payloads/pdf."
     )
     parser.add_argument("pdf_file", help="Caminho do PDF a enviar.")
     parser.add_argument(
@@ -18,7 +18,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--system-a-key",
-        default=os.getenv("SYSTEM_A_API_KEY", "sistema-mobile"),
+        default=os.getenv("SYSTEM_A_API_KEY", "rehabeasy-system-a"),
         help="Chave X-API-KEY do Sistema A.",
     )
     args = parser.parse_args()

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://telemedicinacc.vercel.app/schemas/indexindex-payload.schema.json",
+  "title": "Relatorio Index-Index para RehabEasy Transfer API",
+  "type": "object",
+  "required": ["source", "schema_version", "report_type", "records"],
+  "properties": {
+    "source": { "const": "index-index" },
+    "schema_version": { "type": "string", "examples": ["1.0"] },
+    "report_type": { "const": "INDEX_INDEX" },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "sender", "recipient", "created_at", "summary", "content", "patient", "assessment"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "sender": { "const": "Index-Index" },
+          "recipient": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "summary": { "type": "string" },
+          "content": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "patient": {
+            "type": "object",
+            "required": ["name", "age_years", "sex", "external_id"],
+            "properties": {
+              "name": { "type": "string" },
+              "age_years": { "type": "integer" },
+              "sex": { "type": "string" },
+              "external_id": { "type": "string" }
+            }
+          },
+          "assessment": {
+            "type": "object",
+            "required": ["performed_at", "exam_id", "test_type", "protocol", "metrics", "derived_metrics", "automated_flags"],
+            "properties": {
+              "performed_at": { "type": "string", "format": "date-time" },
+              "exam_id": { "type": "string" },
+              "test_type": { "const": "INDEX_INDEX" },
+              "protocol": {
+                "type": "object",
+                "required": ["description", "closing_criterion", "touch_threshold_mm", "guide_line_length_mm"],
+                "properties": {
+                  "description": { "type": "string" },
+                  "closing_criterion": { "type": "string" },
+                  "touch_threshold_mm": { "type": "number" },
+                  "guide_line_length_mm": { "type": "number" }
+                }
+              },
+              "metrics": {
+                "type": "object",
+                "required": ["final_fingertip_distance_mm", "movement_duration_seconds", "guide_line_length_mm", "left_hand_oscillation_sd_mm", "right_hand_oscillation_sd_mm", "overall_oscillation_sd_mm", "touch_threshold_mm"],
+                "additionalProperties": { "type": "number" }
+              },
+              "derived_metrics": {
+                "type": "object",
+                "required": ["touch_achieved", "asymmetry_ratio", "dominant_oscillation_side"],
+                "properties": {
+                  "touch_achieved": { "type": "boolean" },
+                  "asymmetry_ratio": { "type": ["number", "null"] },
+                  "dominant_oscillation_side": { "enum": ["left", "right"] }
+                }
+              },
+              "automated_flags": {
+                "type": "object",
+                "required": ["touch_within_threshold", "hand_asymmetry"],
+                "properties": {
+                  "touch_within_threshold": { "type": "boolean" },
+                  "hand_asymmetry": {
+                    "type": "object",
+                    "required": ["status", "ratio", "threshold", "dominant_side"],
+                    "properties": {
+                      "status": { "type": "string" },
+                      "ratio": { "type": ["number", "null"] },
+                      "threshold": { "type": "number" },
+                      "dominant_side": { "enum": ["left", "right"] }
+                    }
+                  }
+                }
+              },
+              "interpretation": { "type": "string" },
+              "methodology_notes": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}
