@@ -79,6 +79,7 @@ Para payloads de equilibrio (posturografia VR):
 
 - Use `report_type: "EQUILIBRIO"` e `source: "posturografia-vr"`.
 - Guarde indices em `assessment.posturographic_indices` e quocientes em `assessment.romberg_quotients`.
+- Em cada indice, `value` representa o valor principal de olhos abertos (OA); quando o relatorio trouxer as duas colunas, `eyes_open_value` e `eyes_closed_value` preservam OA e OF separadamente.
 - Use `assessment.interpretation` para o texto clinico resumido.
 - Priorize `derived_metrics` e `automated_flags` para triagem automatica no RehabEasy.
 

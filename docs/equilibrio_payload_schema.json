@@ -113,6 +113,14 @@
                     "code": { "type": "string" },
                     "label": { "type": "string" },
                     "value": { "type": "number" },
+                    "eyes_open_value": {
+                      "type": "number",
+                      "description": "Valor medido com olhos abertos (OA)."
+                    },
+                    "eyes_closed_value": {
+                      "type": "number",
+                      "description": "Valor medido com olhos fechados (OF)."
+                    },
                     "unit": { "type": ["string", "null"] },
                     "reference": {
                       "type": ["object", "null"],

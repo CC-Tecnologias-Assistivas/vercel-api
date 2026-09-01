@@ -144,6 +144,9 @@ def build_payload_from_pdf_bytes(pdf_bytes: bytes) -> dict:
     if not raw_text:
         raise ValueError("Nao foi possivel extrair texto do PDF.")
 
+    if re.search(r"M[eé]dias dos [ií]ndices posturogr[aá]ficos", raw_text, re.IGNORECASE):
+        return build_payload_from_tabular_text(raw_text)
+
     normalized_text = normalize_text(raw_text)
 
     patient_name = capture(raw_text, r"Paciente:\s*([^\n]+?)\s+Sexo:")
@@ -187,7 +190,8 @@ def build_payload_from_pdf_bytes(pdf_bytes: bytes) -> dict:
         f"{above_count} parametros acima do esperado"
     )
     if ap_ml_ratio is not None:
-        summary += f"; predominio ML (AP/ML {ap_ml_ratio:.2f})."
+        predominance = "ML" if ap_ml_ratio < 1.0 else "AP"
+        summary += f"; predominio {predominance} (AP/ML {ap_ml_ratio:.2f})."
     else:
         summary += "."
 
@@ -263,6 +267,254 @@ def build_payload_from_pdf_bytes(pdf_bytes: bytes) -> dict:
         "report_type": "EQUILIBRIO",
         "records": [record],
     }
+
+
+def build_payload_from_tabular_text(raw_text: str) -> dict:
+    """Build the equilibrium contract from the newer OA/OF table layout."""
+    compact_text = " ".join(raw_text.split())
+    patient_name = capture(compact_text, r"Paciente:\s*(.+?)\s+Sexo:")
+    sex = capture(compact_text, r"Sexo:\s*(.+?)\s+Idade:")
+    age_years = int(capture(compact_text, r"Idade:\s*(\d+)"))
+    report_datetime_text = capture(
+        compact_text, r"Data:\s*(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})"
+    )
+    performed_at = parse_br_datetime(report_datetime_text)
+    exam_id = capture(compact_text, r"ID exame:\s*(\S+)")
+    protocol_description = capture(
+        compact_text,
+        r"Protocolo:\s*(.+?)\s+M[eé]dias dos [ií]ndices posturogr[aá]ficos",
+    )
+
+    posturographic_indices = build_tabular_posturographic_indices(raw_text)
+    romberg_quotients = build_tabular_romberg_quotients(raw_text)
+    above_count = sum(
+        item["classification"] == "above_expected" for item in posturographic_indices
+    )
+    borderline_count = sum(
+        item["classification"] == "borderline" for item in posturographic_indices
+    )
+
+    spl = find_index_value(posturographic_indices, "spl")
+    ellipse_area = find_index_value(posturographic_indices, "confidence_ellipse_95_area")
+    velocity = find_index_value(posturographic_indices, "mean_oscillation_velocity")
+    ap_ml_ratio = find_index_value(posturographic_indices, "ap_ml_ratio")
+    romberg_area = find_romberg_value(romberg_quotients, "area")
+    visual_status = "ALERTA" if romberg_area is not None and romberg_area >= 2.0 else "OK"
+    interpretation = extract_interpretation(raw_text)
+    methodology_notes = build_methodology_notes(raw_text)
+    summary = (
+        f"SPL {spl:.1f} mm; area {ellipse_area:.1f} mm2; "
+        f"velocidade {velocity:.2f} mm/s; Romberg area {romberg_area:.2f}; "
+        f"{above_count} parametros acima do esperado"
+    )
+    if ap_ml_ratio is not None:
+        predominance = "ML" if ap_ml_ratio < 1.0 else "AP"
+        summary += f"; predominio {predominance} (AP/ML {ap_ml_ratio:.2f})."
+    else:
+        summary += "."
+
+    patient_name_ascii = to_ascii(patient_name)
+    record = {
+        "id": f"equilibrio-{exam_id}-{performed_at.strftime('%Y%m%dT%H%M%S')}",
+        "title": (
+            f"Equilibrio - {patient_name_ascii} - "
+            f"{performed_at.strftime('%d/%m/%Y %H:%M')}"
+        ),
+        "sender": "Posturografia VR",
+        "recipient": "RehabEasy",
+        "created_at": performed_at.isoformat(),
+        "summary": summary,
+        "content": interpretation or (
+            "Avaliacao posturografica por trajetoria de headset VR com olhos abertos "
+            "e fechados."
+        ),
+        "tags": ["posturografia", "equilibrio", "vr", "romberg", "meta-quest"],
+        "patient": {
+            "name": patient_name_ascii,
+            "age_years": age_years,
+            "sex": to_ascii(sex),
+            "external_id": exam_id,
+        },
+        "assessment": {
+            "performed_at": performed_at.isoformat(),
+            "exam_id": exam_id,
+            "evaluator": extract_evaluator(raw_text),
+            "protocol": {
+                "description": protocol_description,
+                "eyes_conditions": ["open", "closed"],
+                "stance": "normal",
+                "target_duration_seconds": 30,
+                "actual_duration_seconds": extract_actual_duration(raw_text),
+            },
+            "device": {"type": "vr_headset", "model": extract_device_model(raw_text)},
+            "posturographic_indices": posturographic_indices,
+            "romberg_quotients": romberg_quotients,
+            "derived_metrics": {
+                "ap_ml_ratio": ap_ml_ratio,
+                "parameters_above_expected_count": above_count,
+                "parameters_borderline_count": borderline_count,
+                "spl_mm": spl,
+                "confidence_ellipse_95_area_mm2": ellipse_area,
+                "mean_oscillation_velocity_mm_s": velocity,
+                "romberg_area_quotient": romberg_area,
+            },
+            "automated_flags": {
+                "increased_postural_sway": above_count > 0,
+                "visual_dependency": {
+                    "status": visual_status,
+                    "romberg_area_quotient": romberg_area,
+                    "threshold": 2.0,
+                },
+                "lateral_predominance": ap_ml_ratio is not None and ap_ml_ratio < 1.0,
+                "acquisition_warnings": extract_acquisition_warnings(raw_text),
+            },
+            "interpretation": interpretation,
+            "methodology_notes": methodology_notes,
+        },
+    }
+    return {
+        "source": "posturografia-vr",
+        "schema_version": "1.0",
+        "report_type": "EQUILIBRIO",
+        "records": [record],
+    }
+
+
+TABULAR_INDEX_SPECS = [
+    ("spl", "Comprimento de trajet[oó]ria \\(SPL\\)", "mm"),
+    ("confidence_ellipse_95_area", "[ÁA]rea da elipse de confian[cç]a 95%", "mm2"),
+    ("mean_oscillation_velocity", "Velocidade m[eé]dia de oscila[cç][aã]o", "mm/s"),
+    ("mdist", "Deslocamento radial m[eé]dio \\(MDIST\\)", None),
+    ("rdist", "RMS radial \\(RDIST\\)", None),
+    ("rms_ap", "RMS [âa]ntero-posterior \\(AP\\)", "mm"),
+    ("rms_ml", "RMS m[eé]dio-lateral \\(ML\\)", "mm"),
+    ("amplitude_ap", "Amplitude AP \\(pico-a-pico\\)", "mm"),
+    ("amplitude_ml", "Amplitude ML \\(pico-a-pico\\)", "mm"),
+    ("ap_ml_ratio", "Raz[aã]o direcional AP/ML", None),
+    ("mean_frequency", "Frequ[eê]ncia m[eé]dia", "Hz"),
+    ("vertical_head_rms", "Oscila[cç][aã]o vertical da cabe[cç]a \\(RMS\\)", "mm"),
+    ("angular_pitch", "Oscila[cç][aã]o angular\\s*[—-]\\s*inclina[cç][aã]o(?:\\s*\\(pitch\\))?", "deg"),
+    ("angular_roll", "Oscila[cç][aã]o angular\\s*[—-]\\s*lateral(?:\\s*\\(roll\\))?", "deg"),
+    ("angular_yaw", "Oscila[cç][aã]o angular\\s*[—-]\\s*rota[cç][aã]o(?:\\s*\\(yaw\\))?", "deg"),
+]
+
+
+def build_tabular_posturographic_indices(raw_text: str) -> list[dict]:
+    source_lines = [" ".join(line.split()) for line in raw_text.splitlines()]
+    lines = []
+    index = 0
+    while index < len(source_lines):
+        line = source_lines[index]
+        if (
+            re.search(r"Oscila[cç][aã]o angular\s*[—-]\s*inclina[cç][aã]o$", line, re.IGNORECASE)
+            and index + 2 < len(source_lines)
+            and source_lines[index + 1].lower() == "(pitch)"
+        ):
+            lines.append(f"{line} {source_lines[index + 2]}")
+            index += 3
+            continue
+        lines.append(line)
+        index += 1
+
+    indices = []
+    for code, label_pattern, unit in TABULAR_INDEX_SPECS:
+        match = next(
+            (
+                re.match(rf"^{label_pattern}\s+([\d.,]+)\s+([\d.,]+)\s+(.+)$", line, re.IGNORECASE)
+                for line in lines
+                if re.match(rf"^{label_pattern}\s+([\d.,]+)\s+([\d.,]+)\s+(.+)$", line, re.IGNORECASE)
+            ),
+            None,
+        )
+        if not match:
+            continue
+        tail = match.group(3)
+        reference_match = re.search(r"([\d.,]+)\s*[±+]\s*([\d.,]+)", tail)
+        classification = classification_from_text(tail) or (
+            "within_expected" if reference_match else "not_classified"
+        )
+        indices.append(
+            {
+                "code": code,
+                "label": label_from_code(code),
+                "value": parse_float(match.group(1)),
+                "unit": unit,
+                "reference": (
+                    {
+                        "mean": parse_float(reference_match.group(1)),
+                        "sd": parse_float(reference_match.group(2)),
+                    }
+                    if reference_match
+                    else None
+                ),
+                "classification": classification,
+                "eyes_open_value": parse_float(match.group(1)),
+                "eyes_closed_value": parse_float(match.group(2)),
+            }
+        )
+    if not indices:
+        raise ValueError("Nao foi possivel identificar indices posturograficos no PDF.")
+    return indices
+
+
+def build_tabular_romberg_quotients(raw_text: str) -> list[dict]:
+    lines = [" ".join(line.split()) for line in raw_text.splitlines()]
+    specs = [("area", r"Área|Area", "Quociente de Romberg — area (OF/OA)"),
+             ("trajectory", r"Trajetória|Trajetoria", "Quociente de Romberg — trajetoria (OF/OA)"),
+             ("velocity", r"Velocidade", "Quociente de Romberg — velocidade (OF/OA)")]
+    quotients = []
+    for code, label_pattern, label in specs:
+        match = next(
+            (re.match(rf"^({label_pattern})\s+([\d.,]+)\s+<\s*([\d.,]+)\s+(.+)$", line, re.IGNORECASE)
+             for line in lines
+             if re.match(rf"^({label_pattern})\s+([\d.,]+)\s+<\s*([\d.,]+)\s+(.+)$", line, re.IGNORECASE)),
+            None,
+        )
+        if not match:
+            continue
+        quotients.append({
+            "code": code,
+            "label": label,
+            "value": parse_float(match.group(2)),
+            "upper_limit": parse_float(match.group(3)),
+            "classification": classification_from_text(match.group(4)) or "within_expected",
+        })
+    if not quotients:
+        raise ValueError("Nao foi possivel identificar quocientes de Romberg no PDF.")
+    return quotients
+
+
+def classification_from_text(text: str) -> str | None:
+    normalized = normalize_text(text).lower()
+    if "dentro do esperado" in normalized:
+        return "within_expected"
+    if "acima do esperado" in normalized:
+        return "above_expected"
+    if "abaixo do esperado" in normalized:
+        return "below_expected"
+    if "faixa limítrofe" in normalized or "faixa limitrofe" in normalized:
+        return "borderline"
+    return None
+
+
+def label_from_code(code: str) -> str:
+    return {
+        "spl": "Comprimento de trajetoria (SPL)",
+        "confidence_ellipse_95_area": "Area da elipse de confianca 95%",
+        "mean_oscillation_velocity": "Velocidade media de oscilacao",
+        "mdist": "Deslocamento radial medio (MDIST)",
+        "rdist": "RMS radial (RDIST)",
+        "rms_ap": "RMS antero-posterior (AP)",
+        "rms_ml": "RMS medio-lateral (ML)",
+        "amplitude_ap": "Amplitude AP (pico-a-pico)",
+        "amplitude_ml": "Amplitude ML (pico-a-pico)",
+        "ap_ml_ratio": "Razao direcional AP/ML",
+        "mean_frequency": "Frequencia media",
+        "vertical_head_rms": "Oscilacao vertical da cabeca (RMS)",
+        "angular_pitch": "Oscilacao angular - inclinacao (pitch)",
+        "angular_roll": "Oscilacao angular - lateral (roll)",
+        "angular_yaw": "Oscilacao angular - rotacao (yaw)",
+    }[code]
 
 
 def build_posturographic_indices(normalized_text: str, raw_text: str) -> list[dict]:
