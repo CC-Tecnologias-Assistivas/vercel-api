@@ -64,6 +64,52 @@ class SupabaseStorageRepository:
             return f"{base}{path}"
         return f"{base}/storage/v1{path}"
 
+    def delete_pdf(self, object_path: str) -> None:
+        if not object_path:
+            return
+        response = self._request(
+            "DELETE",
+            f"/storage/v1/object/{quote(self._settings.supabase_pdf_bucket)}/{quote(object_path, safe='/')}",
+        )
+        if response.status_code not in (200, 204, 404):
+            raise PayloadStoreUnavailableError(
+                f"Falha ao remover PDF do Storage: {response.text}"
+            )
+
+    def list_pdf_objects(self) -> list[str]:
+        self._ensure_bucket()
+        response = self._request(
+            "POST",
+            f"/storage/v1/object/list/{quote(self._settings.supabase_pdf_bucket)}",
+            json={"prefix": "", "limit": 1000, "offset": 0, "sortBy": {"column": "name", "order": "asc"}},
+        )
+        if response.status_code != 200:
+            raise PayloadStoreUnavailableError(
+                f"Falha ao listar PDFs do Storage: {response.text}"
+            )
+        return self._extract_pdf_paths(response.json(), prefix="")
+
+    def _extract_pdf_paths(self, entries: Any, prefix: str) -> list[str]:
+        paths: list[str] = []
+        if not isinstance(entries, list):
+            return paths
+        for entry in entries:
+            if not isinstance(entry, dict) or not isinstance(entry.get("name"), str):
+                continue
+            name = entry["name"]
+            path = f"{prefix}{name}"
+            if entry.get("id") is not None and name.lower().endswith(".pdf"):
+                paths.append(path)
+            elif entry.get("id") is None:
+                nested = self._request(
+                    "POST",
+                    f"/storage/v1/object/list/{quote(self._settings.supabase_pdf_bucket)}",
+                    json={"prefix": f"{path}/", "limit": 1000, "offset": 0, "sortBy": {"column": "name", "order": "asc"}},
+                )
+                if nested.status_code == 200:
+                    paths.extend(self._extract_pdf_paths(nested.json(), f"{path}/"))
+        return paths
+
     def _ensure_bucket(self) -> None:
         if self._bucket_ready:
             return
@@ -71,12 +117,14 @@ class SupabaseStorageRepository:
         list_response = self._request("GET", "/storage/v1/bucket")
         if list_response.status_code == 200:
             buckets = list_response.json()
-            if isinstance(buckets, list) and any(
-                isinstance(item, dict) and item.get("id") == self._settings.supabase_pdf_bucket
-                for item in buckets
-            ):
-                self._bucket_ready = True
-                return
+            if isinstance(buckets, list):
+                for item in buckets:
+                    if not isinstance(item, dict) or item.get("id") != self._settings.supabase_pdf_bucket:
+                        continue
+                    if item.get("public") is not False:
+                        raise PayloadStoreUnavailableError("O bucket de PDFs precisa ser privado")
+                    self._bucket_ready = True
+                    return
 
         create_response = self._request(
             "POST",

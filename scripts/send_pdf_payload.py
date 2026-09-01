@@ -18,10 +18,13 @@ def main() -> int:
     )
     parser.add_argument(
         "--system-a-key",
-        default=os.getenv("SYSTEM_A_API_KEY", "rehabeasy-system-a"),
-        help="Chave X-API-KEY do Sistema A.",
+        default=os.getenv("SYSTEM_A_API_KEY", ""),
+        help="Credencial key_id.secret do Sistema A.",
     )
     args = parser.parse_args()
+    if not args.system_a_key:
+        print("Credencial ausente. Defina SYSTEM_A_API_KEY ou use --system-a-key.", file=sys.stderr)
+        return 2
 
     pdf_path = Path(args.pdf_file).resolve()
     if not pdf_path.is_file():

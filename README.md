@@ -12,6 +12,7 @@ O armazenamento transacional fica no Supabase/Postgres. O consumo unico e feito 
 - `GET /api/payloads/next`
 - `GET /api/payloads/{id}`
 - `GET /api/payloads/{id}/status`
+- `POST /api/internal/maintenance/purge` (somente manutencao)
 
 ## Fluxo recomendado
 
@@ -35,27 +36,41 @@ O armazenamento transacional fica no Supabase/Postgres. O consumo unico e feito 
 Copie `.env.example` e configure os valores na Vercel:
 
 ```env
-SUPABASE_URL=https://uhkydwfzfionuaiiqirj.supabase.co
+SUPABASE_URL=https://seu-projeto.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PAYLOADS_TABLE=payloads
+SUPABASE_ORGANIZATIONS_TABLE=organizations
+SUPABASE_CREDENTIALS_TABLE=api_credentials
+SUPABASE_AUDIT_TABLE=audit_events
 SUPABASE_PDF_BUCKET=payload-pdfs
-SYSTEM_A_API_KEY=rehabeasy-system-a
-SYSTEM_B_API_KEY=rehabeasy-system-b
+CREDENTIAL_HASH_PEPPER=
+PATIENT_PSEUDONYMIZATION_KEY=
+MAINTENANCE_KEY=
+CRON_SECRET=
 PAYLOAD_TTL_SECONDS=1800
+CONSUMED_PAYLOAD_GRACE_SECONDS=1800
 MAX_PAYLOAD_BYTES=1048576
 MAX_PDF_BYTES=10485760
 PDF_SIGNED_URL_SECONDS=1800
+LOCAL_CLINICAL_RETENTION_DAYS=0
 ENVIRONMENT=production
 ```
 
 Use a service role key somente no backend/Vercel. Nao exponha essa chave no RehabEasy nem em frontend.
 
-Sugestao de nomes para as chaves:
+As credenciais de integracao nao ficam em variaveis globais nem no codigo. Crie
+uma organizacao e credenciais por funcao com
+`python scripts/manage_credentials.py create --organization-id ... --role publisher`
+e distribua o valor exibido uma unica vez ao sistema correspondente. O banco
+guarda somente o hash Argon2id do segredo. Para revogar, use
+`python scripts/manage_credentials.py revoke --credential-id ...`.
 
-- `SYSTEM_A_API_KEY=rehabeasy-system-a`
-- `SYSTEM_B_API_KEY=rehabeasy-system-b`
-
-Nao existe migration SQL para essa troca. Basta atualizar as variaveis de ambiente na Vercel e a configuracao do consumidor.
+Os segredos de ambiente devem ser aleatorios; `CREDENTIAL_HASH_PEPPER`,
+`PATIENT_PSEUDONYMIZATION_KEY` e `MAINTENANCE_KEY` têm pelo menos 32
+caracteres. Nunca os exponha no frontend, nos clientes desktop ou em logs.
+`CRON_SECRET` pode ter no mínimo 16 caracteres e é usado somente pelo cron da
+Vercel. A limpeza roda a cada 10 minutos em produção; o mesmo endpoint aceita
+execução manual com `X-MAINTENANCE-KEY`.
 
 ## Tabela Supabase
 
@@ -75,9 +90,10 @@ create index if not exists idx_payloads_expires_at on public.payloads (expires_a
 create index if not exists idx_payloads_consumed_at on public.payloads (consumed_at);
 ```
 
-Para suporte a PDF, rode tambem [`docs/sql/add_payload_pdf_support.sql`](docs/sql/add_payload_pdf_support.sql)
-(colunas `pdf_path` / `report_type` + bucket privado `payload-pdfs`).
-A API tambem tenta criar o bucket automaticamente no primeiro upload.
+Para suporte completo, rode [`docs/sql/lgpd_hardening.sql`](docs/sql/lgpd_hardening.sql)
+depois do schema original. Ele cria organizacoes, credenciais, auditoria,
+colunas de isolamento e indices de limpeza. O bucket `payload-pdfs` deve ser
+privado; a API tenta cria-lo automaticamente no primeiro upload.
 
 ## Rodar localmente
 
@@ -113,7 +129,7 @@ Criar payload:
 ```bash
 curl -X POST http://127.0.0.1:8000/api/payloads \
   -H "Content-Type: application/json" \
-  -H "X-API-KEY: chave-do-sistema-a" \
+  -H "X-API-KEY: ${SYSTEM_A_API_KEY}" \
   -d '{"source":"sistema-a","schema_version":"1.0","entity":"clinical_report","records":[{"id":"atendimento-ABC-999","title":"Atendimento ABC-999","sender":"sistema-a","recipient":"RehabEasy","created_at":"2026-05-19T10:00:00Z","summary":"Registro para importacao","content":"Paciente sincronizado pela API.","tags":["rehabeasy"]}]}'
 ```
 
@@ -121,14 +137,14 @@ Consumir payload:
 
 ```bash
 curl http://127.0.0.1:8000/api/payloads/payload_ID \
-  -H "X-API-KEY: chave-do-sistema-b"
+  -H "X-API-KEY: ${SYSTEM_B_API_KEY}"
 ```
 
 Consumir automaticamente o proximo payload pendente:
 
 ```bash
 curl http://127.0.0.1:8000/api/payloads/next \
-  -H "X-API-KEY: chave-do-sistema-b"
+  -H "X-API-KEY: ${SYSTEM_B_API_KEY}"
 ```
 
 ## Teste E2E

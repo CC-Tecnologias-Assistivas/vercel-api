@@ -1,3 +1,6 @@
+from contextlib import asynccontextmanager
+import secrets
+
 from fastapi import Depends, FastAPI, File, Request, UploadFile, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -10,7 +13,7 @@ from core.errors import (
     PayloadStoreUnavailableError,
     PayloadTooLargeError,
 )
-from core.security import require_system_a, require_system_b
+from core.security import Principal, require_maintenance_key, require_system_a, require_system_b
 from repositories.supabase_payload_repository import SupabasePayloadRepository
 from repositories.supabase_storage_repository import SupabaseStorageRepository
 from schemas.payload_examples import (
@@ -29,6 +32,12 @@ from schemas.payload_schema import (
 from services.payload_service import PayloadService
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    settings.validate_for_runtime()
+    yield
+
+
 app = FastAPI(
     title="RehabEasy Transfer API",
     description=(
@@ -39,6 +48,7 @@ app = FastAPI(
         "e o Supabase controla expiracao, Storage do PDF e consumo unico."
     ),
     version="1.7.0",
+    lifespan=lifespan,
 )
 
 
@@ -60,6 +70,21 @@ async def validation_exception_handler(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": "Payload vazio ou invalido"},
     )
+
+
+@app.middleware("http")
+async def request_context_middleware(request: Request, call_next):
+    supplied_request_id = request.headers.get("X-REQUEST-ID", "")
+    request.state.request_id = (
+        supplied_request_id[:128]
+        if supplied_request_id and all(
+            character.isalnum() or character in "._:-" for character in supplied_request_id[:128]
+        ) and len(supplied_request_id) <= 128
+        else secrets.token_urlsafe(16)
+    )
+    response = await call_next(request)
+    response.headers["X-REQUEST-ID"] = request.state.request_id
+    return response
 
 
 @app.exception_handler(PayloadTooLargeError)
@@ -108,7 +133,7 @@ async def payload_store_unavailable_handler(
     request: Request, exc: PayloadStoreUnavailableError
 ) -> JSONResponse:
     detail = "Banco Supabase indisponivel ou nao configurado"
-    if str(exc):
+    if settings.environment.lower() not in {"production", "staging"} and str(exc):
         detail = f"{detail}: {str(exc)}"
 
     return JSONResponse(
@@ -135,8 +160,8 @@ def health_check() -> HealthResponse:
     summary="Publica um payload JSON temporario",
     description=(
         "Uso exclusivo do Sistema A. O corpo deve ser um JSON valido. "
-        "A API aceita payload livre, mas recomenda o formato com "
-        "`source`, `schema_version` e `records` para padronizar a integracao."
+        "A API aceita o envelope compatível com os clientes, mas valida e "
+        "persiste somente os campos permitidos por tipo de exame."
     ),
     openapi_extra={
         "requestBody": {
@@ -175,10 +200,10 @@ def health_check() -> HealthResponse:
 )
 async def create_payload(
     request: Request,
-    _: None = Depends(require_system_a),
+    principal: Principal = Depends(require_system_a),
     service: PayloadService = Depends(get_payload_service),
 ) -> CreatePayloadResponse:
-    return await service.create_payload(request)
+    return await service.create_payload(request, principal)
 
 
 @app.post(
@@ -194,13 +219,16 @@ async def create_payload(
     ),
 )
 async def create_payload_from_pdf(
+    request: Request,
     file: UploadFile = File(
         ..., description="PDF do relatorio CvTUG, equilibrio ou Index-Index"
     ),
-    _: None = Depends(require_system_a),
+    principal: Principal = Depends(require_system_a),
     service: PayloadService = Depends(get_payload_service),
 ) -> CreatePayloadResponse:
-    return await service.create_payload_from_pdf(file)
+    return await service.create_payload_from_pdf(
+        file, principal, request_id=request.state.request_id
+    )
 
 
 @app.get(
@@ -215,10 +243,11 @@ async def create_payload_from_pdf(
     ),
 )
 def consume_next_payload(
-    _: None = Depends(require_system_b),
+    request: Request,
+    principal: Principal = Depends(require_system_b),
     service: PayloadService = Depends(get_payload_service),
 ) -> RetrievePayloadResponse:
-    return service.consume_next_payload()
+    return service.consume_next_payload(principal, request.state.request_id)
 
 
 @app.get(
@@ -234,10 +263,11 @@ def consume_next_payload(
 )
 def consume_payload(
     payload_id: str,
-    _: None = Depends(require_system_b),
+    request: Request,
+    principal: Principal = Depends(require_system_b),
     service: PayloadService = Depends(get_payload_service),
 ) -> RetrievePayloadResponse:
-    return service.consume_payload(payload_id)
+    return service.consume_payload(payload_id, principal, request.state.request_id)
 
 
 @app.get(
@@ -252,7 +282,22 @@ def consume_payload(
 )
 def get_payload_status(
     payload_id: str,
-    _: None = Depends(require_system_b),
+    request: Request,
+    principal: Principal = Depends(require_system_b),
     service: PayloadService = Depends(get_payload_service),
 ) -> PayloadStatusFoundResponse | PayloadStatusNotFoundResponse:
-    return service.get_payload_status(payload_id)
+    return service.get_payload_status(payload_id, principal, request.state.request_id)
+
+
+@app.api_route(
+    "/api/internal/maintenance/purge",
+    methods=["GET", "POST"],
+    tags=["maintenance"],
+    summary="Remove payloads temporarios e PDFs orfaos",
+    dependencies=[Depends(require_maintenance_key)],
+)
+def purge_temporary_data(
+    request: Request,
+    service: PayloadService = Depends(get_payload_service),
+) -> dict[str, int]:
+    return service.purge(request.state.request_id)

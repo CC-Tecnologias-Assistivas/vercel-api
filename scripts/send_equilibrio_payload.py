@@ -10,9 +10,6 @@ from pathlib import Path
 DEFAULT_PAYLOAD_PATH = (
     Path(__file__).resolve().parents[1] / "examples" / "equilibrio_payload_sample.json"
 )
-DEFAULT_SYSTEM_A_API_KEY = "rehabeasy-system-a"
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -27,8 +24,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--system-a-key",
-        default=os.getenv("SYSTEM_A_API_KEY", DEFAULT_SYSTEM_A_API_KEY),
-        help="API key do Sistema A. Tambem pode usar SYSTEM_A_API_KEY.",
+        default=os.getenv("SYSTEM_A_API_KEY", ""),
+        help="Credencial key_id.secret do Sistema A. Tambem pode usar SYSTEM_A_API_KEY.",
     )
     parser.add_argument(
         "--payload-file",
@@ -36,6 +33,10 @@ def main() -> int:
         help="Arquivo JSON com o payload de equilibrio a enviar.",
     )
     args = parser.parse_args()
+
+    if not args.system_a_key:
+        print("Credencial ausente. Defina SYSTEM_A_API_KEY ou use --system-a-key.", file=sys.stderr)
+        return 2
 
     payload_path = Path(args.payload_file)
     payload = json.loads(payload_path.read_text(encoding="utf-8"))

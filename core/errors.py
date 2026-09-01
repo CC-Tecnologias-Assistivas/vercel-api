@@ -20,3 +20,7 @@ class PayloadNotFoundError(PayloadApiError):
 
 class PayloadStoreUnavailableError(PayloadApiError):
     pass
+
+
+class AuthenticationUnavailableError(PayloadApiError):
+    pass

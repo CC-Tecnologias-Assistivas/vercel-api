@@ -19,6 +19,8 @@ class SupabasePayloadRepository:
         expires_at: datetime,
         source: str,
         payload: dict[str, Any],
+        organization_id: str,
+        credential_id: str,
         pdf_path: str | None = None,
         report_type: str | None = None,
     ) -> None:
@@ -28,6 +30,8 @@ class SupabasePayloadRepository:
             "expires_at": self._format_timestamp(expires_at),
             "source": source,
             "payload": payload,
+            "organization_id": organization_id,
+            "ingest_credential_id": credential_id,
         }
         if pdf_path is not None:
             body["pdf_path"] = pdf_path
@@ -43,58 +47,34 @@ class SupabasePayloadRepository:
         if response.status_code in (200, 201, 204):
             return
 
-        # Fallback when optional PDF columns are not migrated yet.
-        if pdf_path is not None or report_type is not None:
-            fallback_payload = dict(payload)
-            if pdf_path is not None:
-                fallback_payload["pdf_storage_path"] = pdf_path
-            if report_type is not None:
-                fallback_payload["report_type"] = report_type
-
-            fallback_response = self._request(
-                "POST",
-                "",
-                json={
-                    "id": payload_id,
-                    "created_at": self._format_timestamp(created_at),
-                    "expires_at": self._format_timestamp(expires_at),
-                    "source": source,
-                    "payload": fallback_payload,
-                },
-                headers={"Prefer": "return=minimal"},
-            )
-            if fallback_response.status_code in (200, 201, 204):
-                return
-            raise PayloadStoreUnavailableError(fallback_response.text)
-
         raise PayloadStoreUnavailableError(response.text)
 
-    def consume_payload(self, payload_id: str, consumed_at: datetime) -> dict[str, Any] | None:
+    def consume_payload(
+        self,
+        payload_id: str,
+        consumed_at: datetime,
+        organization_id: str,
+    ) -> dict[str, Any] | None:
         row = self._consume_with_select(
             payload_id=payload_id,
             consumed_at=consumed_at,
+            organization_id=organization_id,
             select="id,payload,pdf_path,report_type",
         )
-        if row is not None:
-            return row
-
-        # Columns may not exist yet; retry with legacy select.
-        return self._consume_with_select(
-            payload_id=payload_id,
-            consumed_at=consumed_at,
-            select="id,payload",
-        )
+        return row
 
     def _consume_with_select(
         self,
         payload_id: str,
         consumed_at: datetime,
+        organization_id: str,
         select: str,
     ) -> dict[str, Any] | None:
         response = self._request(
             "PATCH",
             (
                 f"?id=eq.{quote(payload_id)}"
+                f"&organization_id=eq.{quote(organization_id)}"
                 "&consumed_at=is.null"
                 f"&expires_at=gt.{quote(self._format_timestamp(datetime.now(timezone.utc)))}"
                 f"&select={select}"
@@ -103,19 +83,19 @@ class SupabasePayloadRepository:
             headers={"Prefer": "return=representation"},
         )
         if response.status_code != 200:
-            # Unknown column / schema mismatch -> signal caller to try fallback.
-            if "pdf_path" in select or "report_type" in select:
-                return None
             raise PayloadStoreUnavailableError(response.text)
 
         rows = response.json()
         return rows[0] if rows else None
 
-    def consume_next_payload(self, consumed_at: datetime) -> dict[str, Any] | None:
+    def consume_next_payload(
+        self, consumed_at: datetime, organization_id: str
+    ) -> dict[str, Any] | None:
         response = self._request(
             "GET",
             (
                 "?consumed_at=is.null"
+                f"&organization_id=eq.{quote(organization_id)}"
                 f"&expires_at=gt.{quote(self._format_timestamp(datetime.now(timezone.utc)))}"
                 "&select=id"
                 "&order=created_at.asc"
@@ -126,17 +106,18 @@ class SupabasePayloadRepository:
             raise PayloadStoreUnavailableError(response.text)
 
         for row in response.json():
-            consumed = self.consume_payload(row["id"], consumed_at)
+            consumed = self.consume_payload(row["id"], consumed_at, organization_id)
             if consumed is not None:
                 return consumed
 
         return None
 
-    def get_payload_status(self, payload_id: str) -> dict[str, Any] | None:
+    def get_payload_status(self, payload_id: str, organization_id: str) -> dict[str, Any] | None:
         response = self._request(
             "GET",
             (
                 f"?id=eq.{quote(payload_id)}"
+                f"&organization_id=eq.{quote(organization_id)}"
                 "&select=id,expires_at,consumed_at"
                 "&limit=1"
             ),
@@ -146,6 +127,42 @@ class SupabasePayloadRepository:
 
         rows = response.json()
         return rows[0] if rows else None
+
+    def find_cleanup_candidates(self, cutoff: datetime) -> list[dict[str, Any]]:
+        candidates: list[dict[str, Any]] = []
+        expired_before = self._format_timestamp(datetime.now(timezone.utc))
+        for query in (
+            f"?expires_at=lt.{quote(expired_before)}&select=id,pdf_path,organization_id",
+            f"?consumed_at=lt.{quote(self._format_timestamp(cutoff))}&select=id,pdf_path,organization_id",
+        ):
+            response = self._request("GET", query)
+            if response.status_code != 200:
+                raise PayloadStoreUnavailableError(response.text)
+            candidates.extend(row for row in response.json() if isinstance(row, dict))
+        unique: dict[str, dict[str, Any]] = {
+            row["id"]: row for row in candidates if isinstance(row.get("id"), str)
+        }
+        return list(unique.values())
+
+    def delete_payload(self, payload_id: str) -> bool:
+        response = self._request(
+            "DELETE",
+            f"?id=eq.{quote(payload_id)}",
+            headers={"Prefer": "return=minimal"},
+        )
+        if response.status_code not in (200, 204):
+            raise PayloadStoreUnavailableError(response.text)
+        return True
+
+    def list_referenced_pdf_paths(self) -> set[str]:
+        response = self._request("GET", "?pdf_path=not.is.null&select=pdf_path")
+        if response.status_code != 200:
+            raise PayloadStoreUnavailableError(response.text)
+        return {
+            row["pdf_path"]
+            for row in response.json()
+            if isinstance(row, dict) and isinstance(row.get("pdf_path"), str)
+        }
 
     def _request(
         self,

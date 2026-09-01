@@ -15,6 +15,8 @@ from core.errors import (
 )
 from repositories.supabase_payload_repository import SupabasePayloadRepository
 from repositories.supabase_storage_repository import SupabaseStorageRepository
+from repositories.supabase_audit_repository import SupabaseAuditRepository
+from core.security import Principal
 from schemas.payload_schema import (
     CreatePayloadResponse,
     PayloadStatusFoundResponse,
@@ -22,6 +24,7 @@ from schemas.payload_schema import (
     RetrievePayloadResponse,
 )
 from services.pdf_extractors import extract_payload_from_pdf_bytes
+from services.payload_sanitizer import sanitize_payload
 
 
 class PayloadService:
@@ -30,12 +33,16 @@ class PayloadService:
         repository: SupabasePayloadRepository,
         settings: Settings,
         storage_repository: SupabaseStorageRepository | None = None,
+        audit_repository: SupabaseAuditRepository | None = None,
     ) -> None:
         self._repository = repository
         self._storage = storage_repository or SupabaseStorageRepository(settings=settings)
+        self._audit = audit_repository or SupabaseAuditRepository(settings=settings)
         self._settings = settings
 
-    async def create_payload(self, request: Request) -> CreatePayloadResponse:
+    async def create_payload(
+        self, request: Request, principal: Principal
+    ) -> CreatePayloadResponse:
         content_type = request.headers.get("content-type", "")
         if "application/json" not in content_type.lower():
             raise InvalidPayloadError
@@ -55,9 +62,11 @@ class PayloadService:
         if not isinstance(payload, dict) or not payload:
             raise InvalidPayloadError
 
-        return self._persist_payload(payload=payload)
+        return self._persist_payload(payload=payload, principal=principal, request_id=request.state.request_id)
 
-    async def create_payload_from_pdf(self, upload: UploadFile) -> CreatePayloadResponse:
+    async def create_payload_from_pdf(
+        self, upload: UploadFile, principal: Principal, request_id: str
+    ) -> CreatePayloadResponse:
         filename = (upload.filename or "").lower()
         content_type = (upload.content_type or "").lower()
         if not (
@@ -82,66 +91,178 @@ class PayloadService:
         object_path = f"{payload_id}/{secrets.token_urlsafe(8)}.pdf"
         self._storage.upload_pdf(object_path, pdf_bytes)
 
-        return self._persist_payload(
-            payload=payload,
-            payload_id=payload_id,
-            pdf_path=object_path,
-            report_type=report_type,
-        )
+        try:
+            return self._persist_payload(
+                payload=payload,
+                principal=principal,
+                request_id=request_id,
+                payload_id=payload_id,
+                pdf_path=object_path,
+                report_type=report_type,
+            )
+        except Exception:
+            self._delete_pdf_best_effort(object_path)
+            raise
 
-    def consume_payload(self, payload_id: str) -> RetrievePayloadResponse:
+    def consume_payload(
+        self, payload_id: str, principal: Principal, request_id: str
+    ) -> RetrievePayloadResponse:
         row = self._repository.consume_payload(
             payload_id=payload_id,
             consumed_at=datetime.now(timezone.utc),
+            organization_id=principal.organization_id,
         )
         if row is None:
+            self._audit.record(
+                action="payload.consume",
+                outcome="failure",
+                organization_id=principal.organization_id,
+                credential_id=principal.credential_id,
+                payload_id=payload_id,
+                request_id=request_id,
+            )
             raise PayloadNotFoundError
 
-        return self._build_retrieve_response(row)
+        response = self._build_retrieve_response(row)
+        self._audit.record(
+            action="payload.consume",
+            outcome="success",
+            organization_id=principal.organization_id,
+            credential_id=principal.credential_id,
+            payload_id=payload_id,
+            request_id=request_id,
+        )
+        if response.pdf_url:
+            self._audit.record(
+                action="payload.pdf.access",
+                outcome="success",
+                organization_id=principal.organization_id,
+                credential_id=principal.credential_id,
+                payload_id=payload_id,
+                request_id=request_id,
+            )
+        return response
 
-    def consume_next_payload(self) -> RetrievePayloadResponse:
+    def consume_next_payload(
+        self, principal: Principal, request_id: str
+    ) -> RetrievePayloadResponse:
         row = self._repository.consume_next_payload(
             consumed_at=datetime.now(timezone.utc),
+            organization_id=principal.organization_id,
         )
         if row is None:
+            self._audit.record(
+                action="payload.consume_next",
+                outcome="failure",
+                organization_id=principal.organization_id,
+                credential_id=principal.credential_id,
+                request_id=request_id,
+            )
             raise PayloadNotFoundError
 
-        return self._build_retrieve_response(row)
+        response = self._build_retrieve_response(row)
+        self._audit.record(
+            action="payload.consume_next",
+            outcome="success",
+            organization_id=principal.organization_id,
+            credential_id=principal.credential_id,
+            payload_id=response.id,
+            request_id=request_id,
+        )
+        if response.pdf_url:
+            self._audit.record(
+                action="payload.pdf.access",
+                outcome="success",
+                organization_id=principal.organization_id,
+                credential_id=principal.credential_id,
+                payload_id=response.id,
+                request_id=request_id,
+            )
+        return response
 
     def get_payload_status(
-        self, payload_id: str
+        self, payload_id: str, principal: Principal, request_id: str
     ) -> PayloadStatusFoundResponse | PayloadStatusNotFoundResponse:
-        row = self._repository.get_payload_status(payload_id)
+        row = self._repository.get_payload_status(payload_id, principal.organization_id)
         if row is None or row.get("consumed_at"):
+            self._audit.record(
+                action="payload.status",
+                outcome="failure",
+                organization_id=principal.organization_id,
+                credential_id=principal.credential_id,
+                payload_id=payload_id,
+                request_id=request_id,
+            )
             return PayloadStatusNotFoundResponse(id=payload_id)
 
         expires_at = datetime.fromisoformat(row["expires_at"].replace("Z", "+00:00"))
         ttl_seconds = int((expires_at - datetime.now(timezone.utc)).total_seconds())
         if ttl_seconds <= 0:
+            self._audit.record(
+                action="payload.status",
+                outcome="failure",
+                organization_id=principal.organization_id,
+                credential_id=principal.credential_id,
+                payload_id=payload_id,
+                request_id=request_id,
+            )
             return PayloadStatusNotFoundResponse(id=payload_id)
 
+        self._audit.record(
+            action="payload.status",
+            outcome="success",
+            organization_id=principal.organization_id,
+            credential_id=principal.credential_id,
+            payload_id=payload_id,
+            request_id=request_id,
+        )
         return PayloadStatusFoundResponse(id=payload_id, ttl_seconds=ttl_seconds)
 
     def _persist_payload(
         self,
         payload: dict[str, Any],
+        principal: Principal,
+        request_id: str,
         payload_id: str | None = None,
         pdf_path: str | None = None,
         report_type: str | None = None,
     ) -> CreatePayloadResponse:
+        payload = sanitize_payload(payload, self._settings)
         resolved_id = payload_id or self._generate_payload_id()
         created_at = datetime.now(timezone.utc)
         expires_at = created_at + timedelta(seconds=self._settings.payload_ttl_seconds)
         resolved_report_type = report_type or self._extract_report_type(payload)
 
-        self._repository.insert_payload(
+        try:
+            self._repository.insert_payload(
+                payload_id=resolved_id,
+                created_at=created_at,
+                expires_at=expires_at,
+                source=self._extract_source(payload),
+                payload=payload,
+                organization_id=principal.organization_id,
+                credential_id=principal.credential_id,
+                pdf_path=pdf_path,
+                report_type=resolved_report_type,
+            )
+        except Exception:
+            self._audit.record(
+                action="payload.publish",
+                outcome="failure",
+                organization_id=principal.organization_id,
+                credential_id=principal.credential_id,
+                payload_id=resolved_id,
+                request_id=request_id,
+            )
+            raise
+
+        self._audit.record(
+            action="payload.publish",
+            outcome="success",
+            organization_id=principal.organization_id,
+            credential_id=principal.credential_id,
             payload_id=resolved_id,
-            created_at=created_at,
-            expires_at=expires_at,
-            source=self._extract_source(payload),
-            payload=payload,
-            pdf_path=pdf_path,
-            report_type=resolved_report_type,
+            request_id=request_id,
         )
 
         return CreatePayloadResponse(
@@ -150,6 +271,43 @@ class PayloadService:
             expires_in_minutes=self._settings.payload_ttl_seconds // 60,
         )
 
+    def purge(self, request_id: str | None = None) -> dict[str, int]:
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            seconds=self._settings.consumed_payload_grace_seconds
+        )
+        candidates = self._repository.find_cleanup_candidates(cutoff)
+        deleted_payloads = 0
+        deleted_pdfs = 0
+        for candidate in candidates:
+            pdf_path = candidate.get("pdf_path")
+            if isinstance(pdf_path, str) and pdf_path:
+                self._storage.delete_pdf(pdf_path)
+                deleted_pdfs += 1
+            if isinstance(candidate.get("id"), str):
+                self._repository.delete_payload(candidate["id"])
+                deleted_payloads += 1
+                self._audit.record(
+                    action="payload.delete",
+                    outcome="success",
+                    organization_id=candidate.get("organization_id"),
+                    payload_id=candidate["id"],
+                    request_id=request_id,
+                )
+
+        referenced = self._repository.list_referenced_pdf_paths()
+        for pdf_path in self._storage.list_pdf_objects():
+            if pdf_path not in referenced:
+                self._storage.delete_pdf(pdf_path)
+                deleted_pdfs += 1
+
+        return {"deleted_payloads": deleted_payloads, "deleted_pdfs": deleted_pdfs}
+
+    def _delete_pdf_best_effort(self, object_path: str) -> None:
+        try:
+            self._storage.delete_pdf(object_path)
+        except Exception:
+            return
+
     def _build_retrieve_response(self, row: dict[str, Any]) -> RetrievePayloadResponse:
         payload = row.get("payload")
         if not isinstance(payload, dict):
@@ -157,8 +315,7 @@ class PayloadService:
 
         pdf_path = row.get("pdf_path")
         if not isinstance(pdf_path, str) or not pdf_path:
-            storage_path = payload.get("pdf_storage_path")
-            pdf_path = storage_path if isinstance(storage_path, str) else None
+            pdf_path = None
 
         clean_payload = dict(payload)
         clean_payload.pop("pdf_storage_path", None)

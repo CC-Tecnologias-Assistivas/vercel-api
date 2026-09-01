@@ -29,7 +29,7 @@ class CreatePayloadResponse(BaseModel):
 class RetrievePayloadResponse(BaseModel):
     id: str = Field(description="Identificador do payload consumido.")
     payload: dict[str, Any] = Field(
-        description="Conteudo bruto do payload enviado pelo sistema de origem."
+        description="Payload validado e minimizado conforme o contrato do exame."
     )
     consumed: bool = Field(
         default=True, description="Sempre true quando a leitura for bem-sucedida."

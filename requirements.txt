@@ -3,4 +3,6 @@ httpx
 pydantic
 pypdf
 python-multipart
+argon2-cffi
+jsonschema
 uvicorn[standard]

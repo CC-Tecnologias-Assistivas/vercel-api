@@ -20,22 +20,22 @@ Fluxo esperado (PDF CvTUG / equilibrio / Index-Index):
 
 ## Autenticacao
 
-- Header obrigatorio: `X-API-KEY`
-- `SYSTEM_A_API_KEY`: chave para publicar payloads
-- `SYSTEM_B_API_KEY`: chave para consumir payloads
+- Header obrigatorio: `X-API-KEY` no formato `<key_id>.<secret>`.
+- Cada credencial pertence a uma organizacao e tem funcao `publisher` ou
+  `consumer`, validade e revogacao.
+- Crie, revogue e rotacione credenciais somente pelo comando administrativo
+  `scripts/manage_credentials.py`. O segredo completo e exibido apenas na
+  criacao/rotacao e nao e recuperavel depois.
+- A API deriva a organizacao da credencial. `X-Tenant-ID` nao e aceito como
+  mecanismo de isolamento.
 
-Nao reutilize a chave do Sistema B no sistema publicador.
-
-Padrao sugerido:
-
-- `SYSTEM_A_API_KEY=sistema-mobile`
-- `SYSTEM_B_API_KEY=rehabeasy-sistema`
-
-Essa troca nao exige migration no Supabase porque as chaves nao ficam no banco. A mudanca e apenas de configuracao.
+O segredo nunca deve ser commitado, compartilhado entre organizacoes ou
+impresso em logs. As credenciais antigas de texto fixo deixaram de funcionar.
 
 ## Contrato recomendado
 
-A API aceita qualquer JSON valido no corpo, mas o formato recomendado para integracoes novas e:
+A API aceita o envelope abaixo para integracoes novas e descarta campos fora da
+lista permitida antes da persistencia:
 
 ```json
 {
