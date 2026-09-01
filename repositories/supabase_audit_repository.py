@@ -47,9 +47,7 @@ class SupabaseAuditRepository:
             response = httpx.post(
                 url,
                 headers={
-                    "apikey": self._settings.supabase_service_role_key,
-                    "Authorization": f"Bearer {self._settings.supabase_service_role_key}",
-                    "Content-Type": "application/json",
+                    **self._settings.supabase_request_headers(),
                     "Prefer": "return=minimal",
                 },
                 json=body,

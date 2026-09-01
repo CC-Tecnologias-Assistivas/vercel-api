@@ -167,10 +167,7 @@ class SupabaseStorageRepository:
             raise PayloadStoreUnavailableError("Supabase nao configurado")
 
         url = f"{self._settings.supabase_url.rstrip('/')}{path}"
-        request_headers = {
-            "apikey": self._settings.supabase_service_role_key,
-            "Authorization": f"Bearer {self._settings.supabase_service_role_key}",
-        }
+        request_headers = self._settings.supabase_request_headers()
         if headers:
             request_headers.update(headers)
 

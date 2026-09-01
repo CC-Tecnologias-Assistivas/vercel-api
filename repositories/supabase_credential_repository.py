@@ -104,11 +104,7 @@ class SupabaseCredentialRepository:
             f"{self._settings.supabase_url.rstrip('/')}/rest/v1/"
             f"{quote(self._settings.supabase_credentials_table)}{path_and_query}"
         )
-        request_headers = {
-            "apikey": self._settings.supabase_service_role_key,
-            "Authorization": f"Bearer {self._settings.supabase_service_role_key}",
-            "Content-Type": "application/json",
-        }
+        request_headers = self._settings.supabase_request_headers()
         if headers:
             request_headers.update(headers)
 
@@ -122,11 +118,7 @@ class SupabaseCredentialRepository:
             f"{self._settings.supabase_url.rstrip('/')}/rest/v1/"
             f"{quote(self._settings.supabase_organizations_table)}{path_and_query}"
         )
-        request_headers = {
-            "apikey": self._settings.supabase_service_role_key,
-            "Authorization": f"Bearer {self._settings.supabase_service_role_key}",
-            "Content-Type": "application/json",
-        }
+        request_headers = self._settings.supabase_request_headers()
         try:
             return httpx.request(method, url, headers=request_headers, timeout=10)
         except httpx.HTTPError as exc:

@@ -1,5 +1,8 @@
--- Apply after the original payloads table and before accepting production data.
--- The service-role key remains backend-only; RLS is enabled for defense in depth.
+-- LGPD hardening for the RehabEasy Transfer API.
+--
+-- The API is the only data-plane client. It uses SUPABASE_SECRET_KEY (or the
+-- legacy SUPABASE_SERVICE_ROLE_KEY) on the backend, so no anon/authenticated
+-- policy is required for these tables.
 
 create table if not exists public.organizations (
   id text primary key,
@@ -27,25 +30,6 @@ alter table public.payloads
   add column if not exists report_type text null,
   add column if not exists pdf_path text null;
 
--- Do not allow an unscoped payload to survive the migration. If this fails,
--- map each legacy row to its organization before enabling real traffic.
-do $$
-begin
-  if exists (
-    select 1 from public.payloads
-    where organization_id is null or ingest_credential_id is null
-  ) then
-    raise exception 'payloads possui linhas sem escopo; migre-as antes da producao';
-  end if;
-  alter table public.payloads alter column organization_id set not null;
-  alter table public.payloads alter column ingest_credential_id set not null;
-end $$;
-
-create index if not exists idx_payloads_organization_pending
-  on public.payloads (organization_id, consumed_at, expires_at, created_at);
-create index if not exists idx_credentials_org_role
-  on public.api_credentials (organization_id, role, revoked_at, expires_at);
-
 create table if not exists public.audit_events (
   id bigint generated always as identity primary key,
   organization_id text null references public.organizations(id),
@@ -57,26 +41,46 @@ create table if not exists public.audit_events (
   occurred_at timestamptz not null default now()
 );
 
+create index if not exists idx_payloads_expires_at on public.payloads (expires_at);
+create index if not exists idx_payloads_consumed_at on public.payloads (consumed_at);
+create index if not exists idx_payloads_organization_pending
+  on public.payloads (organization_id, consumed_at, expires_at, created_at);
+create index if not exists idx_payloads_ingest_credential
+  on public.payloads (ingest_credential_id);
+create index if not exists idx_credentials_org_role
+  on public.api_credentials (organization_id, role, revoked_at, expires_at);
 create index if not exists idx_audit_events_org_time
   on public.audit_events (organization_id, occurred_at desc);
+create index if not exists idx_audit_events_credential
+  on public.audit_events (credential_id);
+
+-- Before making these columns NOT NULL, map all legacy rows to a real
+-- organization and a revoked migration credential. Do not delete old data.
+--
+-- Example for a single-organization migration:
+--   insert into public.organizations (id, name)
+--   values ('org-rehabeasy', 'Organizacao RehabEasy')
+--   on conflict (id) do nothing;
+--   update public.payloads
+--      set organization_id = 'org-rehabeasy'
+--    where organization_id is null;
+--   update public.payloads
+--      set ingest_credential_id = '<revoked-migration-credential-id>'
+--    where ingest_credential_id is null;
 
 alter table public.organizations enable row level security;
 alter table public.api_credentials enable row level security;
 alter table public.payloads enable row level security;
 alter table public.audit_events enable row level security;
 
--- No anon/authenticated policy is granted. Backend access uses service_role only.
+revoke all on table public.organizations from anon, authenticated;
+revoke all on table public.api_credentials from anon, authenticated;
+revoke all on table public.payloads from anon, authenticated;
+revoke all on table public.audit_events from anon, authenticated;
 
--- Cleanup function removes transient queue rows. PDF objects are removed by the
--- protected maintenance endpoint before the corresponding row is deleted.
-create or replace function public.rehabeasy_cleanup_payload_rows(p_cutoff timestamptz)
-returns table (id text, pdf_path text)
-language sql
-security definer
-set search_path = public
-as $$
-  delete from public.payloads
-   where expires_at < now()
-      or consumed_at < p_cutoff
-  returning payloads.id, payloads.pdf_path;
-$$;
+insert into storage.buckets (id, name, public)
+values ('payload-pdfs', 'payload-pdfs', false)
+on conflict (id) do update set public = false;
+
+-- Cleanup is performed by the protected API maintenance endpoint. Keep
+-- SECURITY DEFINER functions out of the exposed public schema.

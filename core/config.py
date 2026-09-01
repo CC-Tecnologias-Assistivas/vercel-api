@@ -27,7 +27,10 @@ class Settings:
     def from_env(cls) -> "Settings":
         return cls(
             supabase_url=os.getenv("SUPABASE_URL", ""),
-            supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", ""),
+            supabase_service_role_key=(
+                os.getenv("SUPABASE_SECRET_KEY", "")
+                or os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+            ),
             supabase_payloads_table=os.getenv("SUPABASE_PAYLOADS_TABLE", "payloads"),
             supabase_organizations_table=os.getenv(
                 "SUPABASE_ORGANIZATIONS_TABLE", "organizations"
@@ -62,7 +65,7 @@ class Settings:
 
         required = {
             "SUPABASE_URL": self.supabase_url,
-            "SUPABASE_SERVICE_ROLE_KEY": self.supabase_service_role_key,
+            "SUPABASE_SECRET_KEY/SUPABASE_SERVICE_ROLE_KEY": self.supabase_service_role_key,
             "CREDENTIAL_HASH_PEPPER": self.credential_hash_pepper,
             "PATIENT_PSEUDONYMIZATION_KEY": self.patient_pseudonymization_key,
             "MAINTENANCE_KEY": self.maintenance_key,
@@ -82,6 +85,19 @@ class Settings:
             raise RuntimeError("MAINTENANCE_KEY precisa ter pelo menos 32 caracteres")
         if len(self.cron_secret) < 16:
             raise RuntimeError("CRON_SECRET precisa ter pelo menos 16 caracteres")
+
+    def supabase_request_headers(self) -> dict[str, str]:
+        """Return headers compatible with both new and legacy Supabase keys."""
+        headers = {
+            "apikey": self.supabase_service_role_key,
+            "Content-Type": "application/json",
+        }
+        # New sb_secret keys must not be sent as Authorization: Bearer because
+        # they are opaque keys, not JWTs. Legacy service_role keys still need
+        # the Bearer header for compatibility with existing deployments.
+        if not self.supabase_service_role_key.startswith("sb_secret_"):
+            headers["Authorization"] = f"Bearer {self.supabase_service_role_key}"
+        return headers
 
 
 def _get_int_env(name: str, default: int) -> int:

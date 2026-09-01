@@ -37,6 +37,7 @@ Copie `.env.example` e configure os valores na Vercel:
 
 ```env
 SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_SECRET_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_PAYLOADS_TABLE=payloads
 SUPABASE_ORGANIZATIONS_TABLE=organizations
@@ -56,7 +57,9 @@ LOCAL_CLINICAL_RETENTION_DAYS=0
 ENVIRONMENT=production
 ```
 
-Use a service role key somente no backend/Vercel. Nao exponha essa chave no RehabEasy nem em frontend.
+Use `SUPABASE_SECRET_KEY` (`sb_secret_...`) somente no backend/Vercel. A
+`SUPABASE_SERVICE_ROLE_KEY` legada continua aceita como fallback durante a
+migracao. Nunca exponha nenhuma delas no RehabEasy nem em frontend.
 
 As credenciais de integracao nao ficam em variaveis globais nem no codigo. Crie
 uma organizacao e credenciais por funcao com

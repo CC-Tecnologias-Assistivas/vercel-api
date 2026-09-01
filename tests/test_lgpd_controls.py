@@ -92,6 +92,27 @@ class LgpdControlsTest(unittest.TestCase):
         self.assertEqual("org-a", result["organization_id"])
         self.assertEqual("consumer", result["role"])
 
+    def test_new_secret_key_is_sent_only_as_apikey(self):
+        settings = Settings(
+            "https://example.supabase.co", "sb_secret_test", "payloads", "organizations",
+            "api_credentials", "audit_events", "payload-pdfs", environment="test",
+        )
+
+        headers = settings.supabase_request_headers()
+
+        self.assertEqual("sb_secret_test", headers["apikey"])
+        self.assertNotIn("Authorization", headers)
+
+    def test_legacy_service_role_key_keeps_bearer_compatibility(self):
+        settings = Settings(
+            "https://example.supabase.co", "legacy-service-role", "payloads", "organizations",
+            "api_credentials", "audit_events", "payload-pdfs", environment="test",
+        )
+
+        headers = settings.supabase_request_headers()
+
+        self.assertEqual("Bearer legacy-service-role", headers["Authorization"])
+
 
 if __name__ == "__main__":
     unittest.main()
